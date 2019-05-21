@@ -11,7 +11,6 @@ import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/src/bytes/dicom_bytes_base.dart';
-//import 'package:core/src/error.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 /// Explicit Little Endian [Bytes].
@@ -22,7 +21,7 @@ abstract class EvrBytes extends DicomBytesBase {
   factory EvrBytes.from(Bytes bytes, int start, int vrIndex, int end) {
     if (isEvrShortVRIndex(vrIndex)) {
       return EvrShortBytes.from(bytes, start, end);
-    } else if (isEvrLongVR(vrIndex)) {
+    } else if (isEvrLongVRIndex(vrIndex)) {
       return EvrLongBytes.from(bytes, start, end);
     } else {
       return throw ArgumentError('Bad VR Index: $vrIndex');
@@ -37,7 +36,7 @@ abstract class EvrBytes extends DicomBytesBase {
       Bytes bytes, int start, int vrIndex, int end, Endian endian) {
     if (isEvrShortVRIndex(vrIndex)) {
       return EvrShortBytes.view(bytes, start, end, endian);
-    } else if (isEvrLongVR(vrIndex)) {
+    } else if (isEvrLongVRIndex(vrIndex)) {
       return EvrLongBytes.view(bytes, start, end, endian);
     } else {
       return throw ArgumentError('Bad VR Index: $vrIndex');
@@ -108,9 +107,8 @@ class EvrShortBytes extends EvrBytes {
     return vlf;
   }
 
-/* flush when working
-  int get vfLength => buf.length;
-*/
+  @override
+  int get vfLength => buf.length - 8;
 
   /// Returns a _view_ of _this_ containing the bytes from [start] inclusive
   /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
@@ -177,11 +175,9 @@ class EvrLongBytes extends EvrBytes {
     return vlf;
   }
 
-/* flush when working
-  int get vfLength {
-    return (vfLengthField == kUndefinedLength) ? buf.length - 8 : buf.length;
-  }
-*/
+  @override
+  int get vfLength => buf.length - 12;
+
 
   /// Returns a _view_ of _this_ containing the bytes from [start] inclusive
   /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.

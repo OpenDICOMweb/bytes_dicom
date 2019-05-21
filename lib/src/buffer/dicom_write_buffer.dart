@@ -17,17 +17,15 @@ class DicomWriteBuffer extends WriteBuffer {
   /// Creates an empty [DicomWriteBuffer].
   DicomWriteBuffer(
       [int length = kDefaultLength,
-      Endian endian = Endian.little,
-      int limit = kDefaultLimit])
-      : super(length, endian, limit);
+      Endian endian = Endian.little])
+      : super(length, endian);
 
   /// Creates a [DicomWriteBuffer] from a [WriteBuffer].
   DicomWriteBuffer.from(WriteBuffer wb,
       [int offset = 0,
       int length,
-      Endian endian = Endian.little,
-      int limit = kDefaultLimit])
-      : super.from(wb, offset, length, endian, limit);
+      Endian endian = Endian.little])
+      : super.from(wb, offset, length, endian);
 
   /// Creates a [DicomWriteBuffer] from a [GrowableBytes].
   DicomWriteBuffer.fromBytes(GrowableBytes bytes, int rIndex, int wIndex)
@@ -37,9 +35,8 @@ class DicomWriteBuffer extends WriteBuffer {
   DicomWriteBuffer.typedDataView(TypedData td,
       [int offset = 0,
       int lengthInBytes,
-      Endian endian = Endian.little,
-      int limit = kDefaultLimit])
-      : super.typedDataView(td, offset, lengthInBytes, endian, limit);
+      Endian endian = Endian.little])
+      : super.typedDataView(td, offset, lengthInBytes, endian);
 
   /// Write a DICOM Tag Code to _this_.
   void writeCode(int code, [int eLength = 12]) {

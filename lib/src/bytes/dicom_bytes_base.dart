@@ -14,6 +14,7 @@ import 'package:bytes_dicom/src/bytes/dicom_bytes_mixin.dart';
 import 'package:bytes_dicom/src/bytes/evr_bytes.dart';
 import 'package:bytes_dicom/src/bytes/ivr_bytes.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
+//import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 /// A abstract subclass of [Bytes] that supports Explicit Value
 /// Representations (EVR) and Implicit Value Representations (IVR).
@@ -29,7 +30,7 @@ abstract class DicomBytesBase extends Bytes with DicomBytesMixin {
           Endian endian = Endian.little}) =>
       (!isEvr)
           ? IvrBytes.view(bytes, offset, end, endian)
-          : (isEvrLongVR(vrIndex))
+          : (isEvrLongVRIndex(vrIndex))
               ? EvrLongBytes.view(bytes, offset, end, endian)
               : EvrShortBytes.view(bytes, offset, end, endian);
 
@@ -72,7 +73,7 @@ abstract class DicomBytesBase extends Bytes with DicomBytesMixin {
   /// Returns a [String] in DICOM Tag Code format, e.g. (gggg,eeee),
   /// corresponding to the Tag [code].
   String _dcm(int code) {
-    assert(code >= 0 && code <= 0xFFFFFFFF, 'code: $code');
+    assert(code >= 0 && code <= kUndefinedLength, 'code: $code');
     return '(${_hex(code >> 16, 4)},${_hex(code & 0xFFFF, 4)})';
   }
 

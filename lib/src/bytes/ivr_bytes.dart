@@ -70,6 +70,9 @@ class IvrBytes extends DicomBytesBase {
     return vlf;
   }
 
+  @override
+  int get vfLength => buf.length - 8;
+
   /// Returns a _view_ of _this_ containing the bytes from [start] inclusive
   /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
   /// An error occurs if [start] is outside the range 0 .. [length],

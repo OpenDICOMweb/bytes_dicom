@@ -33,7 +33,8 @@ const int kUCIndex = 7; // String EVR Min, Long String EVR Min
 const int kURIndex = 8;
 const int kUTIndex = 9; // Long EVR Max, Defined Long EVR Max
 
-bool isEvrLongVR(int vrIndex) => vrIndex >= kSQIndex && vrIndex <= kUTIndex;
+bool isEvrLongVRIndex(int vrIndex) =>
+    vrIndex >= kSQIndex && vrIndex <= kUTIndex;
 
 // Short EVRs
 const int kAEIndex = 10; // Short String EVR Min
