@@ -6,17 +6,21 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-import 'package:core/server.dart' hide group;
+import 'package:bytes/bytes.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
+import 'package:bytes_dicom/src/bytes/charset.dart';
+import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-  Server.initialize(name: 'bytes_test.dart', level: Level.info);
+
   final rng = RNG();
 
   group('Bytes Tests', () {
     test('DicomReadBuffer', () {
       final vList0 = ['1q221', 'sadaq223'];
-      final bytes0 = Bytes.asciiFromList(vList0);
+      final s = vList0.join('\\');
+      final bytes0 = BytesDicomLE.fromAscii(s);
       final dReadBuffer0 = DicomReadBuffer(bytes0);
       print('dReadBuffer0:$dReadBuffer0');
 
@@ -35,8 +39,8 @@ void main() {
 
     test('ReadBuffer', () {
       final vList0 = rng.uint8List(1, 10);
-      final bytes = Uint8.toBytes(vList0);
-      final readBuffer0 = ReadBuffer(bytes);
+      final bytes = BytesDicomLE.typedDataView(vList0);
+      final readBuffer0 = DicomReadBuffer(bytes);
       print('readBuffer0: $readBuffer0');
 
       expect(readBuffer0.rIndex == bytes.offset, true);
@@ -47,7 +51,7 @@ void main() {
       expect(readBuffer0.offset == bytes.offset, true);
       expect(readBuffer0.bytes == bytes, true);
 
-      final readBuffer1 = ReadBuffer.fromList(vList0);
+      final readBuffer1 = DicomReadBuffer(Bytes.fromList(vList0));
       print('readBuffer1: $readBuffer1');
 
       expect(readBuffer1.rIndex == bytes.offset, true);
@@ -59,11 +63,11 @@ void main() {
       expect(readBuffer1.bytes == bytes, true);
     });
 
-    test('ReadBuffer.from', () {
+    test('DicomReadBuffer.from', () {
       final vList0 = rng.uint8List(1, 10);
-      final bytes = Uint8.toBytes(vList0);
-      final readBuffer0 = ReadBuffer(bytes);
-      print('readBuffer0: $readBuffer0');
+      final bytes = BytesDicomLE.typedDataView(vList0);
+      final readBuffer0 = DicomReadBuffer(bytes);
+      print('DicomReadBuffer0: $readBuffer0');
 
       expect(readBuffer0.rIndex == bytes.offset, true);
       expect(readBuffer0.wIndex == bytes.length, true);
@@ -73,7 +77,7 @@ void main() {
       expect(readBuffer0.offset == bytes.offset, true);
       expect(readBuffer0.bytes == bytes, true);
 
-      final from0 = ReadBuffer.from(readBuffer0);
+      final from0 = DicomReadBuffer.from(readBuffer0);
       print('ReadBuffer.from: $from0');
 
       expect(from0.rIndex == bytes.offset, true);
@@ -84,14 +88,14 @@ void main() {
       expect(from0.bytes == bytes, true);
     });
 
-    test('ReadBuffer readAscii', () {
+    test('DicomReadBuffer readAscii', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint8List(1, i);
-        final bytes = Uint8.toBytes(vList0);
-        final readBuffer0 = ReadBuffer(bytes);
+        final bytes = BytesDicomLE.typedDataView(vList0);
+        final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
-        final readAscii0 = readBuffer0.readAscii(vList0.length);
+        final readAscii0 = readBuffer0.readAscii(length: vList0.length);
         print('readAscii: $readAscii0');
         expect(readAscii0 == ascii.decode(vList0), true);
       }
@@ -100,11 +104,11 @@ void main() {
     test('ReadBuffer readUtf8', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint8List(1, i);
-        final bytes = Uint8.toBytes(vList0);
-        final readBuffer0 = ReadBuffer(bytes);
+        final bytes = BytesDicomLE.typedDataView(vList0);
+        final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
-        final readUtf80 = readBuffer0.readUtf8(vList0.length);
+        final readUtf80 = readBuffer0.readUtf8(length: vList0.length);
         print('readUtf8: $readUtf80');
         expect(readUtf80 == utf8.decode(vList0), true);
       }
@@ -113,8 +117,8 @@ void main() {
     test('ReadBuffer readUint8List', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint8List(1, i);
-        final bytes = Uint8.toBytes(vList0);
-        final readBuffer0 = ReadBuffer(bytes);
+        final bytes = BytesDicomLE.typedDataView(vList0);
+        final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
         final v = readBuffer0.readUint8List(vList0.length);
@@ -126,8 +130,8 @@ void main() {
     test('ReadBuffer readUint16List', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint16List(1, i);
-        final bytes = Uint16.toBytes(vList0);
-        final readBuffer0 = ReadBuffer(bytes);
+        final bytes = BytesDicomLE.typedDataView(vList0);
+        final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
         final v = readBuffer0.readUint16List(vList0.length);
@@ -139,8 +143,8 @@ void main() {
     test('ReadBuffer readUint32List', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint16List(1, i);
-        final bytes = Uint32.toBytes(vList0);
-        final readBuffer0 = ReadBuffer(bytes);
+        final bytes = BytesDicomLE.typedDataView(vList0);
+        final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
         final v = readBuffer0.readUint32List(vList0.length);

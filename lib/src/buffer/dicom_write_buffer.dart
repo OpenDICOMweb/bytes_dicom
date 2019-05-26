@@ -27,8 +27,8 @@ class DicomWriteBuffer extends WriteBuffer {
       Endian endian = Endian.little])
       : super.from(wb, offset, length, endian);
 
-  /// Creates a [DicomWriteBuffer] from a [GrowableBytes].
-  DicomWriteBuffer.fromBytes(GrowableBytes bytes, int rIndex, int wIndex)
+  /// Creates a [DicomWriteBuffer] from a [Bytes].
+  DicomWriteBuffer.fromBytes(Bytes bytes, int rIndex, int wIndex)
       : super.fromBytes(bytes, rIndex, wIndex);
 
   /// Creates a [[DicomWriteBuffer]] that uses a [TypedData] view of [td].

@@ -6,14 +6,13 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-
 import 'dart:typed_data';
 
-import 'package:core/server.dart' hide group;
+import 'package:bytes/bytes.dart';
+import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-  Server.initialize(name: 'bytes_uint8_test.dart', level: Level.info);
   final rng = RNG();
 
   test('Basic Uint8 tests', () {
@@ -30,7 +29,7 @@ void main() {
     print('vList3: $vList3');
     expect(vList3, equals(vList0));
     expect(vList3, equals(vList2));
-    final bytes1 = Uint8.toBytes(vList0);
+    final bytes1 = Bytes.typedDataView(vList0);
     final vList4 = bytes1.asUint8List();
     expect(vList4, equals(vList3));
   });

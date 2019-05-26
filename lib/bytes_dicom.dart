@@ -6,9 +6,8 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-export 'package:bytes_dicom/src/bytes/bytes_padded.dart';
-export 'package:bytes_dicom/src/bytes/dicom_bytes_mixin.dart';
-export 'package:bytes_dicom/src/bytes/dicom_growable_bytes.dart';
+export 'package:bytes_dicom/src/buffer/dicom_read_buffer.dart';
+export 'package:bytes_dicom/src/buffer/dicom_write_buffer.dart';
+export 'package:bytes_dicom/src/bytes/dicom_bytes.dart';
 export 'package:bytes_dicom/src/bytes/evr_bytes.dart';
-export 'package:bytes_dicom/src/bytes/bytes_padded.dart';
 export 'package:bytes_dicom/src/bytes/ivr_bytes.dart';

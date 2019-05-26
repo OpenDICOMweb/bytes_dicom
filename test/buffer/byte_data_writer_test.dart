@@ -5,23 +5,22 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-import 'package:core/server.dart' hide group;
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:test/test.dart';
 
 void main() {
-  Server.initialize(name: 'byte_date_writer.dart', level: Level.info);
 
   group('ByteDataBuffer', () {
 
     test('Buffer Growing Test', () {
       const startSize = 1;
       const iterations = 1024 * 1;
-      final wb = WriteBuffer(startSize);
+      final wb = DicomWriteBuffer(startSize);
       print('''
 iterations: $iterations
   index: ${wb.writeIndex}
   length: ${wb.length}
-  maxLength: ${wb.limit}
+  maxLength: ${wb.length}
 ''');
 
       expect(wb.writeIndex == 0, true);

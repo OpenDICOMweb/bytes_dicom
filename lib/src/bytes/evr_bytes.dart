@@ -6,90 +6,56 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-import 'dart:typed_data';
-
-
 import 'package:bytes/bytes.dart';
-import 'package:bytes_dicom/src/bytes/dicom_bytes_base.dart';
+import 'package:bytes_dicom/src/bytes/dicom_bytes_mixin.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 /// Explicit Little Endian [Bytes].
-abstract class EvrBytes extends DicomBytesBase {
-  EvrBytes._(int eLength, Endian endian) : super(eLength, endian);
+mixin EvrBytes {
+  int getUint8(int offset);
 
-  /// Creates an [EvrBytes] from [bytes].
-  factory EvrBytes.from(Bytes bytes, int start, int vrIndex, int end) {
-    if (isEvrShortVRIndex(vrIndex)) {
-      return EvrShortBytes.from(bytes, start, end);
-    } else if (isEvrLongVRIndex(vrIndex)) {
-      return EvrLongBytes.from(bytes, start, end);
-    } else {
-      return throw ArgumentError('Bad VR Index: $vrIndex');
-    }
-  }
-
-  EvrBytes._from(Bytes bytes, int start, int end, Endian endian)
-      : super.from(bytes, start, end, endian ?? Endian.little);
-
-  /// Creates an [EvrBytes] from a view of [bytes].
-  factory EvrBytes.view(
-      Bytes bytes, int start, int vrIndex, int end, Endian endian) {
-    if (isEvrShortVRIndex(vrIndex)) {
-      return EvrShortBytes.view(bytes, start, end, endian);
-    } else if (isEvrLongVRIndex(vrIndex)) {
-      return EvrLongBytes.view(bytes, start, end, endian);
-    } else {
-      return throw ArgumentError('Bad VR Index: $vrIndex');
-    }
-  }
-
-  EvrBytes._view(Bytes bytes, int offset, int length, Endian endian)
-      : super.internalView(bytes, offset, length, endian);
-
-  @override
+  /// Returns _true_.
   bool get isEvr => true;
-  @override
-  int get vrCode => getVRCode(kVROffset);
-  @override
+
+  // TODO replace with 16 bit version??
+  int get vrCode => (getUint8(4) << 8) + getUint8(5);
+
   int get vrIndex => vrIndexFromCode(vrCode);
-  @override
+
   String get vrId => vrIdFromIndex(vrIndex);
+
+
 
   /// The offset to the Value Field.
   static const int kVROffset = 4;
 }
 
 /// Explicit Little Endian Element with short (16-bit) Value Field Length.
-class EvrShortBytes extends EvrBytes {
-  /// Returns an [EvrShortBytes].
-  EvrShortBytes(int eLength, [Endian endian = Endian.little])
-      : super._(eLength, endian);
+class EvrShortLEBytes extends BytesLittleEndian with EvrBytes, DicomBytesMixin {
+  /// Returns an [EvrShortLEBytes].
+  EvrShortLEBytes(int length) : super.empty(length);
 
-  /// Returns an [EvrShortBytes] created from [bytes].
-  EvrShortBytes.from(Bytes bytes,
-      [int start = 0, int end, Endian endian = Endian.little])
-      : super._from(bytes, start, end, endian);
+  /// Returns an [EvrShortLEBytes] created from [bytes].
+  EvrShortLEBytes.from(Bytes bytes, [int start = 0, int end])
+      : super.from(bytes, start, end);
 
-  /// Returns an [EvrShortBytes] created from a view of [bytes].
-  EvrShortBytes.view(Bytes bytes,
-      [int start = 0, int end, Endian endian = Endian.little])
-      : super._view(bytes, start, end, endian);
+  /// Returns an [EvrShortLEBytes] created from a view of [bytes].
+  EvrShortLEBytes.view(Bytes bytes, [int start = 0, int end])
+      : super.view(bytes, start, end);
 
-  /// Returns an [EvrShortBytes] with an empty Value Field.
-  factory EvrShortBytes.empty(int code, int vfLength, int vrCode,
-      [Endian endian = Endian.little]) {
-    final e = EvrShortBytes(kHeaderLength + vfLength, endian)
+  /// Returns an [EvrShortLEBytes] with an empty Value Field.
+  factory EvrShortLEBytes.element(int code, int vfLength, int vrCode) {
+    final e = EvrShortLEBytes(kHeaderLength + vfLength)
       ..evrSetShortHeader(code, vfLength, vrCode);
     return e;
   }
 
-  /// Returns an [EvrShortBytes] created from a view
+  /// Returns an [EvrShortLEBytes] created from a view
   /// of a Value Field ([vfBytes]).
-  factory EvrShortBytes.fromVFBytes(int code, Bytes vfBytes, int vrCode,
-      [Endian endian = Endian.little]) {
+  factory EvrShortLEBytes.fromVFBytes(int code, Bytes vfBytes, int vrCode) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
-    final e = EvrShortBytes(kHeaderLength + vfLength, endian)
+    final e = EvrShortLEBytes(kHeaderLength + vfLength)
       ..evrSetShortHeader(code, vfLength, vrCode)
       ..setByteData(kVFOffset, vfBytes.bd);
     return e;
@@ -97,7 +63,9 @@ class EvrShortBytes extends EvrBytes {
 
   @override
   int get vfOffset => kVFOffset;
-  @override
+
+  /// The byte offset from the beginning of the Element
+  /// to the Value Length Field.
   int get vfLengthOffset => kVFLengthOffset;
 
   @override
@@ -115,8 +83,8 @@ class EvrShortBytes extends EvrBytes {
   /// An error occurs if [start] is outside the range 0 .. [length],
   /// or if [end] is outside the range [start] .. [length].
   @override
-  EvrShortBytes sublist([int start = 0, int end]) =>
-      EvrShortBytes.from(this, start, (end ?? length) - start, endian);
+  EvrShortLEBytes sublist([int start = 0, int end]) =>
+      EvrShortLEBytes.from(this, start, (end ?? length) - start);
 
   /// The Value Field Length field offset.
   static const int kVFLengthOffset = 6;
@@ -124,40 +92,35 @@ class EvrShortBytes extends EvrBytes {
   /// The Value Field offset.
   static const int kVFOffset = 8;
 
-  /// The header length of an [EvrShortBytes].
+  /// The header length of an [EvrShortLEBytes].
   static const int kHeaderLength = kVFOffset;
 }
 
 /// Explicit Little Endian [Bytes] with long (32-bit) Value Field Length.
-class EvrLongBytes extends EvrBytes {
-  /// Creates an [EvrLongBytes] of [length].
-  EvrLongBytes(int length, [Endian endian = Endian.little])
-      : super._(length, endian);
+class EvrLongLEBytes extends BytesLittleEndian with EvrBytes, DicomBytesMixin {
+  /// Creates an [EvrLongLEBytes] of [length].
+  EvrLongLEBytes(int length) : super.empty(length);
 
-  /// Creates an [EvrLongBytes] from [Bytes].
-  EvrLongBytes.from(Bytes bytes,
-      [int start = 0, int end, Endian endian = Endian.little])
-      : super._from(bytes, start, end, endian);
+  /// Creates an [EvrLongLEBytes] from [Bytes].
+  EvrLongLEBytes.from(Bytes bytes, [int start = 0, int end])
+      : super.from(bytes, start, end);
 
-  /// Creates an [EvrLongBytes] from a view of [Bytes].
-  EvrLongBytes.view(Bytes bytes,
-      [int start = 0, int end, Endian endian = Endian.little])
-      : super._view(bytes, start, end, endian);
+  /// Creates an [EvrLongLEBytes] from a view of [Bytes].
+  EvrLongLEBytes.view(Bytes bytes, [int start = 0, int end])
+      : super.view(bytes, start, end);
 
-  /// Returns an [EvrLongBytes] with an empty Value Field.
-  factory EvrLongBytes.empty(int code, int vfLength, int vrCode,
-      [Endian endian = Endian.little]) {
-    final e = EvrLongBytes(kHeaderLength + vfLength, endian)
+  /// Returns an [EvrLongLEBytes] with an empty Value Field.
+  factory EvrLongLEBytes.element(int code, int vfLength, int vrCode) {
+    final e = EvrLongLEBytes(kHeaderLength + vfLength)
       ..evrSetLongHeader(code, vfLength, vrCode);
     return e;
   }
 
-  /// Creates an [EvrLongBytes].
-  factory EvrLongBytes.fromVFBytes(int code, Bytes vfBytes, int vrCode,
-      [Endian endian = Endian.little]) {
+  /// Creates an [EvrLongLEBytes].
+  factory EvrLongLEBytes.fromVFBytes(int code, Bytes vfBytes, int vrCode) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
-    final e = EvrLongBytes(kHeaderLength + vfLength, endian)
+    final e = EvrLongLEBytes(kHeaderLength + vfLength)
       ..evrSetLongHeader(code, vfLength, vrCode)
       ..setByteData(kVFOffset, vfBytes.bd);
     return e;
@@ -165,7 +128,9 @@ class EvrLongBytes extends EvrBytes {
 
   @override
   int get vfOffset => kVFOffset;
-  @override
+
+  /// The byte offset from the beginning of the Element
+  /// to the Value Length Field.
   int get vfLengthOffset => kVFLengthOffset;
 
   @override
@@ -178,14 +143,13 @@ class EvrLongBytes extends EvrBytes {
   @override
   int get vfLength => buf.length - 12;
 
-
   /// Returns a _view_ of _this_ containing the bytes from [start] inclusive
   /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
   /// An error occurs if [start] is outside the range 0 .. [length],
   /// or if [end] is outside the range [start] .. [length].
   @override
-  EvrLongBytes sublist([int start = 0, int end]) =>
-      EvrLongBytes.from(this, start, (end ?? length) - start, endian);
+  EvrLongLEBytes sublist([int start = 0, int end]) =>
+      EvrLongLEBytes.from(this, start, (end ?? length) - start);
 
   /// The offset to the Value Field Length field.
   static const int kVFLengthOffset = 8;
@@ -193,6 +157,7 @@ class EvrLongBytes extends EvrBytes {
   /// The offset to the Value Field.
   static const int kVFOffset = 12;
 
-  /// The header length of an [EvrLongBytes].
+  /// The header length of an [EvrLongLEBytes].
   static const int kHeaderLength = kVFOffset;
 }
+

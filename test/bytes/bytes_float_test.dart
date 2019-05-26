@@ -9,11 +9,13 @@
 
 import 'dart:typed_data';
 
-import 'package:core/server.dart' hide group;
+import 'package:bytes/bytes.dart';
+import 'package:bytes/src/constants.dart';
+import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-  Server.initialize(name: 'bytes_test.dart', level: Level.info);
+
   final rng = RNG();
   group('Bytes Float Tests', () {
 
@@ -31,7 +33,7 @@ void main() {
       print('vList3: $vList3');
       expect(vList3, equals(vList2));
 
-      final bytes1 = Float32Mixin.toBytes(vList0);
+      final bytes1 = Bytes.typedDataView(vList0);
       final vList4 = bytes1.asFloat32List();
       expect(vList4, equals(vList3));
 
@@ -45,7 +47,7 @@ void main() {
       final box = ByteData(kFloat32Size);
 
       for (var i = 0; i < loopCount; i++) {
-        final a = Bytes(length * kFloat32Size);
+        final a = Bytes.empty(length * kFloat32Size);
         print('a: $a');
         assert(a.length == length * kFloat32Size, true);
 

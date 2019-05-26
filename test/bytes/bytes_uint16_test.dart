@@ -8,14 +8,16 @@
 //
 import 'dart:typed_data';
 
-import 'package:core/server.dart' hide group;
+import 'package:bytes/bytes.dart';
+import 'package:bytes/src/constants.dart';
+import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-  Server.initialize(name: 'bytes_uint16_test.dart', level: Level.info);
+
   final rng = RNG();
 
-  final intList = [Uint16.kMinValue, Uint16.kMaxValue];
+  final intList = [kUint16MinValue, kUint16MaxValue];
 
   test('Basic Uint16 tests', () {
     final vList0 = Uint16List.fromList(intList);
@@ -45,7 +47,7 @@ void main() {
     expect(vList3[0], equals(vList0[0]));
     expect(vList3[1], equals(vList0[1]));
 
-    final bytes1 = Uint16.toBytes(vList0);
+    final bytes1 = Bytes.typedDataView(vList0);
     expect(bytes0 == bytes1, true);
     final vList4 = bytes1.asUint16List();
     expect(vList4, equals(vList3));

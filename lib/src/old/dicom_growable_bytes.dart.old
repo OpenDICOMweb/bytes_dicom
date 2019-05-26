@@ -7,11 +7,12 @@
 //  See the AUTHORS file for other contributors.
 //
 import 'dart:typed_data';
-
+/*
 import 'package:bytes/bytes.dart';
 
+
 /// A growable DicomBytes.
-class GrowableDicomBytes extends GrowableBytes with DicomWriterMixin {
+class GrowableDicomBytes extends Bytes with DicomWriterMixin {
   /// Creates a growable DicomBytes.
   GrowableDicomBytes([int length, Endian endian]) : super(length, endian);
 
@@ -31,6 +32,7 @@ class GrowableDicomBytes extends GrowableBytes with DicomWriterMixin {
       [int offset = 0, int lengthInBytes, Endian endian])
       : super.typedDataView(td, offset, lengthInBytes, endian);
 }
+*/
 
 /// A mixin for a Dicom Writer.
 mixin DicomWriterMixin {

@@ -6,11 +6,12 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-import 'package:core/server.dart' hide group;
+import 'package:bytes/bytes.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
+import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-  Server.initialize(name: 'bytes_uint16_test.dart', level: Level.info);
   final rng = RNG();
 
   test('DicomReadBuffer', () {

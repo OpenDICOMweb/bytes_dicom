@@ -10,26 +10,26 @@ import 'dart:convert' as cvt;
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
-import 'package:bytes_dicom/src/dicom_constants.dart';
-
+import 'package:bytes_dicom/src/bytes/dicom_bytes.dart';
 import 'package:bytes_dicom/src/bytes/charset.dart';
-
+import 'package:bytes_dicom/src/dicom_constants.dart';
 
 const _kBackslash = 92;
 
 mixin DicomBytesMixin {
   Uint8List get buf;
-  bool get isEvr;
+  // bool get isEvr;
   int get vrCode;
   int get vrIndex;
   String get vrId;
-  Endian get endian;
+//  Endian get endian;
   int get offset;
   int get vfOffset;
-  int get vfLengthOffset;
+//  int get vfLengthOffset;
   int get vfLengthField;
   int get length;
 
+  int operator [](int offset);
   int getUint8(int offset);
   int getUint16(int offset);
   int getUint32(int offset);
@@ -58,6 +58,30 @@ mixin DicomBytesMixin {
 
   // **** End of Interface
 
+  @override
+  bool operator ==(Object other) =>
+      (other is DicomBytesMixin && ignorePadding && _bytesEqual(this, other)) ||
+      __bytesEqual(this, other, ignorePadding);
+
+//  @override
+//  int get hashCode => super.hashCode;
+
+  // Urgent is this field necessary
+  /// If _true_ padding at the end of Value Fields will be ignored.
+  ///
+  /// _Note_: Only used by == operator.
+  bool ignorePadding = true;
+
+  /// Returns a [ByteData] that is a copy of the specified region of _this_.
+  static ByteData copyBDRegion(ByteData bd, int offset, int length) {
+    final len = length ?? bd.lengthInBytes;
+    final _nLength = len.isOdd ? len + 1 : length;
+    final bdNew = ByteData(_nLength);
+    for (var i = 0, j = offset; i < len; i++, j++)
+      bdNew.setUint8(i, bd.getUint8(j));
+    return bdNew;
+  }
+
   Uint8List _removePadding(Uint8List list) {
     if (list.isEmpty) return list;
     final lastIndex = list.length - 1;
@@ -80,13 +104,14 @@ mixin DicomBytesMixin {
           int length,
           bool allowInvalid = true,
           Charset charset = utf8,
-          bool noPadding = false}) =>
+          bool removePadding = false}) =>
       _getString(
-          offset, length ?? buf.length, allowInvalid, noPadding, charset);
+          offset, length ?? buf.length, allowInvalid, removePadding, charset);
 
   /// Returns a [List<String>]. This is done by first decoding
   /// the specified region as _UTF-8_, and then _split_ing the
   /// resulting [String] using the [separator].
+/*
   List<String> getStringList(
       {int offset = 0,
       int length,
@@ -97,6 +122,23 @@ mixin DicomBytesMixin {
         offset: offset,
         length: length,
         allowInvalid: allowInvalid,
+        charset: charset);
+    return (s.isEmpty) ? <String>[] : s.split(separator);
+  }
+*/
+
+  List<String> getStringList(
+      {int offset = 0,
+      int length,
+      bool allowInvalid = true,
+      String separator = '\\',
+      Charset charset = utf8,
+      bool removePadding = true}) {
+    final s = getString(
+        offset: offset,
+        length: length,
+        allowInvalid: allowInvalid,
+        removePadding: removePadding,
         charset: charset);
     return (s.isEmpty) ? <String>[] : s.split(separator);
   }
@@ -193,7 +235,7 @@ mixin DicomBytesMixin {
   int get vfLength => buf.length - vfOffset;
 
   /// Returns the Value Field bytes.
-  Bytes get vfBytes => asBytes(vfOffset, vfLength);
+  BytesDicomLE get vfBytes => asBytes(vfOffset, vfLength);
 
   /// Returns the last Uint8 element in [vfBytes], if [vfBytes]
   /// is not empty; otherwise, returns _null_.
@@ -216,15 +258,13 @@ mixin DicomBytesMixin {
     return (group << 16) + elt;
   }
 
-  int getVRCode(int offset) => (getUint8(offset) << 8) + getUint8(offset + 1);
-
   int getShortVLF(int offset) => getUint16(offset);
 
   int getLongVLF(int offset) => getUint32(offset);
 
   // **** Primitive Setters
 
-  /// Returns the Tag Code from [Bytes].
+  /// Returns the Tag Code from _this_.
   void setCode(int code) {
     setUint16(0, code >> 16);
     setUint16(2, code & 0xFFFF);
@@ -278,8 +318,8 @@ mixin DicomBytesMixin {
   /// UTF-8 encodes the specified range of [s] and then writes the
   /// code units to _this_ starting at [start]. Returns the offset
   /// of the last byte + 1.
-  int setUtf8(int start, String s, [int padChar = kSpace]) => setUint8List(
-      start, cvt.utf8.encode(s), 0, null, padChar);
+  int setUtf8(int start, String s, [int padChar = kSpace]) =>
+      setUint8List(start, cvt.utf8.encode(s), 0, null, padChar);
 
   /// Converts the [String]s in [sList] into a [Uint8List].
   /// Then copies the bytes into _this_ starting at
@@ -397,6 +437,123 @@ mixin DicomBytesMixin {
         : buf.buffer.asUint8List(buf.offsetInBytes + offset, length - offset);
   }
 
+  @override
+  String toString() {
+    final vlf = vfLengthField;
+    return '$runtimeType ${_dcm(code)} $vrId($vrIndex, ${_hex(vrCode, 4)}) '
+        'vlf($vlf, ${_hex(vlf, 8)}) vfl($vfLength) ${super.toString()}';
+  }
+
+  /// Returns a [String] in DICOM Tag Code format, e.g. (gggg,eeee),
+  /// corresponding to the Tag [code].
+  String _dcm(int code) {
+    assert(code >= 0 && code <= kUndefinedLength, 'code: $code');
+    return '(${_hex(code >> 16, 4)},${_hex(code & 0xFFFF, 4)})';
+  }
+
+  String _hex(int n, int width) => '${n.toRadixString(16).padLeft(width, '0')}';
+
+
   static const int _kGroupOffset = 0;
   static const int _kEltOffset = 0;
+}
+
+/// Checks the Value Field length.
+bool checkVFLengthField(int vfLengthField, int vfLength) {
+  if (vfLengthField != vfLength && vfLengthField != kUndefinedLength) {
+//    log.warn('** vfLengthField($vfLengthField) != vfLength($vfLength)');
+    if (vfLengthField == vfLength + 1) {
+      print('** vfLengthField: Odd length field: $vfLength');
+      return true;
+    }
+    return false;
+  }
+  return true;
+}
+
+bool _bytesEqual(DicomBytesMixin a, DicomBytesMixin b) {
+  final aLen = a.length;
+  if (aLen != b.length) return false;
+  for (var i = 0; i < aLen; i++) if (a[i] != b[i]) return false;
+  return true;
+}
+
+// TODO: test performance of _uint16Equal and _uint32Equal
+bool __bytesEqual(DicomBytesMixin a, DicomBytesMixin b, bool ignorePadding) {
+  final len0 = a.length;
+  final len1 = b.length;
+  if (len0 != len1) return false;
+  if ((len0 % 4) == 0) {
+    return _uint32Equal(a, b, ignorePadding);
+  } else if ((len0 % 2) == 0) {
+    return _uint16Equal(a, b, ignorePadding);
+  } else {
+    return _uint8Equal(a, b, ignorePadding);
+  }
+}
+
+// Note: optimized to use 4 byte boundary
+bool _uint8Equal(DicomBytesMixin a, DicomBytesMixin b, bool ignorePadding) {
+  for (var i = 0; i < a.length; i += 1) {
+    final x = a.buf[i];
+    final y = b.buf[i];
+    if (x != y) return _bytesMaybeNotEqual(i, a, b, ignorePadding);
+  }
+  return true;
+}
+
+// Note: optimized to use 2 byte boundary
+bool _uint16Equal(DicomBytesMixin a, DicomBytesMixin b, bool ignorePadding) {
+  for (var i = 0; i < a.length; i += 2) {
+    final x = a.getUint16(i);
+    final y = b.getUint16(i);
+    if (x != y) return _bytesMaybeNotEqual(i, a, b, ignorePadding);
+  }
+  return true;
+}
+
+// Note: optimized to use 4 byte boundary
+bool _uint32Equal(DicomBytesMixin a, DicomBytesMixin b, bool ignorePadding) {
+  for (var i = 0; i < a.length; i += 4) {
+    final x = a.getUint32(i);
+    final y = b.getUint32(i);
+    if (x != y) return _bytesMaybeNotEqual(i, a, b, ignorePadding);
+  }
+  return true;
+}
+
+bool _bytesMaybeNotEqual(
+    int i, DicomBytesMixin a, DicomBytesMixin b, bool ignorePadding) {
+  var errorCount = 0;
+  final ok = __bytesMaybeNotEqual(i, a, b, ignorePadding);
+  if (!ok) {
+    errorCount++;
+    if (errorCount > 3) throw ArgumentError('Unequal');
+    return false;
+  }
+  return true;
+}
+
+bool __bytesMaybeNotEqual(
+    int i, DicomBytesMixin a, DicomBytesMixin b, bool ignorePadding) {
+  if ((a[i] == 0 && b[i] == 32) || (a[i] == 32 && b[i] == 0)) {
+    //  log.warn('$i ${a[i]} | ${b[i]} Padding char difference');
+    return ignorePadding;
+  } else {
+    _warnBytes(i, a, b);
+    return false;
+  }
+}
+
+void _warnBytes(int i, DicomBytesMixin a, DicomBytesMixin b) {
+  final x = a[i];
+  final y = b[i];
+  print('''
+$i: $x | $y')
+	  "${String.fromCharCode(x)}" | "${String.fromCharCode(y)}"
+	    '    $a')
+      '    $b')
+      '    ${a.getAscii()}')
+      '    ${b.getAscii()}');
+''');
 }

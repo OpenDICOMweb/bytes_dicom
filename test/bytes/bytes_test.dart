@@ -9,7 +9,7 @@
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
-import 'package:bytes_dicom/src/bytes/bytes_padded.dart';
+import 'package:bytes_dicom/src/bytes/dicom_bytes.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
@@ -21,7 +21,7 @@ void main() {
 
       // Check initialized with zeros
       for (var i = 0; i < count; i++) {
-        final bytes = BytesPadded(count);
+        final bytes = BytesDicomLE.empty(count);
         expect(bytes.endian == Endian.little, true);
 
         expect(bytes.elementSizeInBytes == 1, true);
@@ -79,7 +79,7 @@ void main() {
           expect(bytes.getFloat64(i) == 0, true);
         }
 
-        final bytes0 = BytesPadded.from(bytes);
+        final bytes0 = BytesDicomLE.from(bytes);
         expect(bytes0.endian == Endian.little, true);
 
         expect(bytes0.elementSizeInBytes == 1, true);
@@ -93,8 +93,8 @@ void main() {
 
     test('Test List interface: initial zeroed, equality, hashCode', () {
       const count = 255;
-      final a = BytesPadded(count);
-      final b = BytesPadded(count);
+      final a = BytesDicomLE.empty(count);
+      final b = BytesDicomLE.empty(count);
 
       // Check initialized with zeros
       for (var i = 0; i < count; i++) {
@@ -133,7 +133,7 @@ void main() {
       const loopCount = 100;
 
       for (var i = 0; i < loopCount; i++) {
-        final a = BytesPadded(0xFFFF * kInt16Size);
+        final a = BytesDicomLE.empty(0xFFFF * kInt16Size);
         assert(a.length == 0xFFFF * kInt16Size, true);
 
         for (var i = 0, j = -10; i <= 10; i++, j += 2) {
@@ -150,8 +150,8 @@ void main() {
 
     test('bytes from', () {
       final list0 = rng.uint8List(1, 1);
-      final bytes = BytesPadded.typedDataView(list0);
-      final byteF0 = BytesPadded.from(bytes);
+      final bytes = BytesDicomLE.typedDataView(list0);
+      final byteF0 = BytesDicomLE.from(bytes);
       expect(byteF0, equals(bytes));
 
       expect(byteF0.endian == Endian.little, true);
@@ -179,7 +179,7 @@ void main() {
 
     test('bytes fromTypedData', () {
       final list0 = rng.uint8List(1, 1);
-      final byteFTD0 = BytesPadded.typedDataView(list0);
+      final byteFTD0 = BytesDicomLE.typedDataView(list0);
       expect(byteFTD0, equals(list0));
 
       expect(byteFTD0.endian == Endian.little, true);
@@ -191,7 +191,7 @@ void main() {
 
       final floats = <double>[0, 1, 2, 3];
       final fl32List0 = Float32List.fromList(floats);
-      final fl32Bytes0 = BytesPadded.typedDataView(fl32List0);
+      final fl32Bytes0 = BytesDicomLE.typedDataView(fl32List0);
       expect(fl32Bytes0.getFloat32(0) == fl32List0[0], true);
       expect(fl32Bytes0.getFloat32(4) == fl32List0[1], true);
       expect(fl32Bytes0.getFloat32(8) == fl32List0[2], true);
@@ -203,7 +203,7 @@ void main() {
         expect(fl32List0[i] == fl32List1[i], true);
 
       // Unaligned
-      final fl32b = BytesPadded(20)
+      final fl32b = BytesDicomLE.empty(20)
         ..setFloat32(2, floats[0])
         ..setFloat32(6, floats[1])
         ..setFloat32(10, floats[2])
@@ -222,7 +222,7 @@ void main() {
     test('bytes fromByteData', () {
       final list0 = rng.uint8List(1, 1);
       final bd = list0.buffer.asByteData();
-      final byteFD0 = BytesPadded.typedDataView(bd);
+      final byteFD0 = BytesDicomLE.typedDataView(bd);
       print('byteFD0: $byteFD0');
 
       expect(byteFD0.endian == Endian.little, true);

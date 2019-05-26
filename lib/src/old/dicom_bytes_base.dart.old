@@ -18,40 +18,55 @@ import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 /// A abstract subclass of [Bytes] that supports Explicit Value
 /// Representations (EVR) and Implicit Value Representations (IVR).
-abstract class DicomBytesBase extends Bytes with DicomBytesMixin {
-  /// Creates an empty [DicomBytesBase].
-  DicomBytesBase(int length, Endian endian) : super(length, endian);
+abstract class DicomBytes extends Bytes with DicomBytesMixin {
+  ///
+  DicomBytes(Uint8List buf) : super(buf);
 
-  /// Creates a [DicomBytesBase] view of [bytes].
-  factory DicomBytesBase.view(Bytes bytes, int vrIndex,
+  /// Creates an empty [DicomBytes].
+  factory DicomBytes.empty(int length, Endian endian) =>
+      (endian == Endian.little)
+          ? BytesLittleEndian.empty(length)
+          : BytesBigEndian.empty(length);
+
+  /// Creates a [DicomBytes] view of [bytes].
+  factory DicomBytes.view(Bytes bytes, int vrIndex,
           {bool isEvr = true,
           int offset = 0,
           int end,
           Endian endian = Endian.little}) =>
       (!isEvr)
-          ? IvrBytes.view(bytes, offset, end, endian)
+          ? IvrBytes.view(bytes, offset, end)
           : (isEvrLongVRIndex(vrIndex))
-              ? EvrLongBytes.view(bytes, offset, end, endian)
-              : EvrShortBytes.view(bytes, offset, end, endian);
+              ? EvrLongLEBytes.view(bytes, offset, end)
+              : EvrShortLEBytes.view(bytes, offset, end);
 
-  /// Creates a [DicomBytesBase] from a copy of [bytes].
-  DicomBytesBase.from(Bytes bytes, int start, int end, Endian endian)
-      : super.from(bytes, start, end, endian);
+  /// Creates a [DicomBytes] from a copy of [bytes].
+  factory DicomBytes.from(Bytes bytes,
+      [int offset, int length, Endian endian]) {
+    endian ??= bytes.endian;
+    return (endian == Endian.little)
+        ? BytesLittleEndian.from(bytes, offset, length)
+        : BytesBigEndian.from(bytes, offset, length);
+  }
 
   /// __For internal use only__
-  DicomBytesBase.internalView(Bytes bytes,
-      [int offset = 0, int end, Endian endian = Endian.little])
-      : super.view(bytes, offset, end, endian);
+  factory DicomBytes.internalView(Bytes bytes,
+          [int offset = 0, int length]) =>
+      (bytes.endian == Endian.little)
+          ? BytesLittleEndian.view(bytes, offset, length)
+          : BytesBigEndian.view(bytes, offset, length);
 
   /// Creates a new [Bytes] from a [TypedData] containing the specified
   /// region and [endian]ness.  [endian] defaults to [Endian.little].
-  DicomBytesBase.typedDataView(TypedData td,
-      [int offsetInBytes = 0, int lengthInBytes, Endian endian = Endian.little])
-      : super.typedDataView(td, offsetInBytes, lengthInBytes, endian);
+  factory DicomBytes.typedDataView(TypedData td,
+          [int offset = 0, int length, Endian endian = Endian.little]) =>
+      (endian == Endian.little)
+          ? BytesLittleEndian.typedDataView(td, offset, length)
+          : BytesBigEndian.typedDataView(td, offset, length);
 
   @override
   bool operator ==(Object other) =>
-      (other is DicomBytesBase && ignorePadding && _bytesEqual(this, other)) ||
+      (other is DicomBytes && ignorePadding && _bytesEqual(this, other)) ||
       __bytesEqual(this, other, ignorePadding);
 
 //  @override
@@ -61,6 +76,7 @@ abstract class DicomBytesBase extends Bytes with DicomBytesMixin {
   /// If _true_ padding at the end of Value Fields will be ignored.
   ///
   /// _Note_: Only used by == operator.
+  @override
   bool ignorePadding = true;
 
   @override
@@ -103,7 +119,7 @@ bool checkVFLengthField(int vfLengthField, int vfLength) {
   return true;
 }
 
-bool _bytesEqual(DicomBytesBase a, DicomBytesBase b) {
+bool _bytesEqual(DicomBytes a, DicomBytes b) {
   final aLen = a.length;
   if (aLen != b.length) return false;
   for (var i = 0; i < aLen; i++) if (a[i] != b[i]) return false;
@@ -111,7 +127,7 @@ bool _bytesEqual(DicomBytesBase a, DicomBytesBase b) {
 }
 
 // TODO: test performance of _uint16Equal and _uint32Equal
-bool __bytesEqual(DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
+bool __bytesEqual(DicomBytes a, DicomBytes b, bool ignorePadding) {
   final len0 = a.length;
   final len1 = b.length;
   if (len0 != len1) return false;
@@ -125,7 +141,7 @@ bool __bytesEqual(DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
 }
 
 // Note: optimized to use 4 byte boundary
-bool _uint8Equal(DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
+bool _uint8Equal(DicomBytes a, DicomBytes b, bool ignorePadding) {
   for (var i = 0; i < a.length; i += 1) {
     final x = a.buf[i];
     final y = b.buf[i];
@@ -135,7 +151,7 @@ bool _uint8Equal(DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
 }
 
 // Note: optimized to use 2 byte boundary
-bool _uint16Equal(DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
+bool _uint16Equal(DicomBytes a, DicomBytes b, bool ignorePadding) {
   for (var i = 0; i < a.length; i += 2) {
     final x = a.getUint16(i);
     final y = b.getUint16(i);
@@ -145,7 +161,7 @@ bool _uint16Equal(DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
 }
 
 // Note: optimized to use 4 byte boundary
-bool _uint32Equal(DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
+bool _uint32Equal(DicomBytes a, DicomBytes b, bool ignorePadding) {
   for (var i = 0; i < a.length; i += 4) {
     final x = a.getUint32(i);
     final y = b.getUint32(i);
@@ -155,7 +171,7 @@ bool _uint32Equal(DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
 }
 
 bool _bytesMaybeNotEqual(
-    int i, DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
+    int i, DicomBytes a, DicomBytes b, bool ignorePadding) {
   var errorCount = 0;
   final ok = __bytesMaybeNotEqual(i, a, b, ignorePadding);
   if (!ok) {
@@ -167,7 +183,7 @@ bool _bytesMaybeNotEqual(
 }
 
 bool __bytesMaybeNotEqual(
-    int i, DicomBytesBase a, DicomBytesBase b, bool ignorePadding) {
+    int i, DicomBytes a, DicomBytes b, bool ignorePadding) {
   if ((a[i] == 0 && b[i] == 32) || (a[i] == 32 && b[i] == 0)) {
     //  log.warn('$i ${a[i]} | ${b[i]} Padding char difference');
     return ignorePadding;
@@ -177,7 +193,7 @@ bool __bytesMaybeNotEqual(
   }
 }
 
-void _warnBytes(int i, DicomBytesBase a, DicomBytesBase b) {
+void _warnBytes(int i, DicomBytes a, DicomBytes b) {
   final x = a[i];
   final y = b[i];
   print('''

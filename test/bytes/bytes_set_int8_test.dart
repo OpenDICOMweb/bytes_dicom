@@ -15,7 +15,7 @@ void main() {
     test('Bytes write Int8 Test', () {
       const startSize = 1;
       const iterations = 1024 * 1;
-      final bytes = BytesPadded(startSize);
+      final bytes = BytesDicomLE.empty(startSize);
       print('''
 iterations: $iterations
   index: ${bytes.offset}

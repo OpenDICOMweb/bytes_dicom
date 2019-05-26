@@ -8,15 +8,16 @@
 //
 import 'dart:typed_data';
 
-import 'package:core/server.dart' hide group;
+import 'package:bytes/bytes.dart';
+import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-  Server.initialize(name: 'bytes_test.dart', level: Level.info);
+
   final rng = RNG();
 //  group('Bytes Float Tests', () {
 
-  final intList = [Int16.kMinValue, Int16.kMaxValue];
+  final intList = [kInt16MinValue, kInt16MaxValue];
 
   test('Basic Int16 tests', () {
     final vList0 = Int16List.fromList(intList);
@@ -46,7 +47,7 @@ void main() {
     expect(vList3[0], equals(vList0[0]));
     expect(vList3[1], equals(vList0[1]));
 
-    final bytes1 = Int16.toBytes(vList0);
+    final bytes1 = Bytes.typedDataView(vList0);
     expect(bytes0 == bytes1, true);
     final vList4 = bytes1.asInt16List();
     expect(vList4, equals(vList3));
