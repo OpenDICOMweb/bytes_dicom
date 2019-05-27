@@ -8,8 +8,8 @@
 //
 import 'dart:typed_data';
 
-import 'package:bytes/bytes.dart';
-import 'package:bytes_dicom/src/bytes/dicom_bytes.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
+import 'package:bytes_dicom/src/bytes/bytes_dicom.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
@@ -92,7 +92,7 @@ void main() {
     });
 
     test('Test List interface: initial zeroed, equality, hashCode', () {
-      const count = 255;
+      const count = 254;
       final a = BytesDicomLE.empty(count);
       final b = BytesDicomLE.empty(count);
 
@@ -149,8 +149,9 @@ void main() {
     });
 
     test('bytes from', () {
-      final list0 = rng.uint8List(1, 1);
+      final list0 = rng.uint8List(2, 2);
       final bytes = BytesDicomLE.typedDataView(list0);
+      expect(bytes, equals(list0));
       final byteF0 = BytesDicomLE.from(bytes);
       expect(byteF0, equals(bytes));
 
@@ -161,21 +162,6 @@ void main() {
       expect(byteF0.length == bytes.length, true);
       expect(byteF0.hashCode is int, true);
     });
-
-/* Urgent implement or not
-    test('bytes fromList', () {
-      final list0 = rng.uint8List(1, 1);
-      final byteFL0 = BytesPadded.fromList(list0);
-      expect(byteFL0, equals(list0));
-
-      expect(byteFL0.endian == Endian.little, true);
-      expect(byteFL0.elementSizeInBytes == 1, true);
-      expect(byteFL0.offset == 0, true);
-      expect(byteFL0.buffer == byteFL0.bd.buffer, true);
-      expect(byteFL0.length == list0.length, true);
-      expect(byteFL0.hashCode is int, true);
-    });
-*/
 
     test('bytes fromTypedData', () {
       final list0 = rng.uint8List(1, 1);

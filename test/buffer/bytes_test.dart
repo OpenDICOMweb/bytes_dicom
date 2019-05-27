@@ -77,7 +77,7 @@ void main() {
       expect(readBuffer0.offset == bytes.offset, true);
       expect(readBuffer0.bytes == bytes, true);
 
-      final from0 = DicomReadBuffer.from(readBuffer0);
+      final from0 = DicomReadBuffer(readBuffer0.bytes);
       print('ReadBuffer.from: $from0');
 
       expect(from0.rIndex == bytes.offset, true);

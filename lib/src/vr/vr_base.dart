@@ -286,7 +286,7 @@ const int kSTMaxLength = 1024;
 const int kTMCode = 0x544d;
 
 const int kUCCode = 0x5543;
-const int kUCMaxLength = kMaxLongVF;
+const int kUCMaxLength = kMaxLongVFLength;
 const int kUICode = 0x5549;
 const int kULCode = 0x554c;
 const int kUNCode = 0x554e;
@@ -294,7 +294,7 @@ const int kUNCode = 0x554e;
 const int kURCode = 0x5552;
 const int kUSCode = 0x5553;
 const int kUTCode = 0x5554;
-const int kUTMaxLength = kMaxLongVF;
+const int kUTMaxLength = kMaxLongVFLength;
 
 const Map<int, int> vrIndexByCode8Bit = <int, int>{
   kAECode: kAEIndex, kASCode: kASIndex, kATCode: kATIndex, kCSCode: kCSIndex,

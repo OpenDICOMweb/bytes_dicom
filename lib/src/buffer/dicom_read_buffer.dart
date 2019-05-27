@@ -7,54 +7,59 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-import 'package:bytes_buffer/bytes_buffer.dart';
-import 'package:bytes_dicom/src/vr/vr_base.dart';
-import 'package:bytes_dicom/src/bytes/dicom_bytes.dart';
+import 'dart:typed_data';
 
-// ignore_for_file: public_member_api_docs
+import 'package:bytes/bytes.dart';
+import 'package:bytes_buffer/bytes_buffer.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
+import 'package:bytes_dicom/src/bytes/ascii.dart';
+import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 /// A [BytesBuffer] for reading DicomBytes from [BytesDicomLE].
 /// EVR and IVR are taken care of by the underlying [BytesDicomLE].
 class DicomReadBuffer extends ReadBufferBase with ReadBufferMixin {
-  /// The underlying [BytesDicomLE] for _this_.
-  @override
-  final BytesDicomLE bytes;
-  @override
-  int rIndex;
-  @override
-  int wIndex;
-
   /// Constructor
   DicomReadBuffer(this.bytes, [int offset = 0, int length])
       : rIndex = offset ?? 0,
         wIndex = length ?? bytes.length;
 
+/*
   /// Creates a [ReadBuffer] from another [ReadBuffer].
   DicomReadBuffer.from(DicomReadBuffer rb, [int offset = 0, int length])
-      : bytes = BytesDicomLE.from(rb.bytes, offset, length),
+      : bytes = (rb.endian == Endian.little)
+      ? BytesDicomLE.from(rb.bytes, offset, length)
+  : BytesDicomLE.from(rb.bytes, offset, length),
         rIndex = offset ?? rb.bytes.offset,
         wIndex = length ?? rb.bytes.length;
+*/
 
-  // Urgent DICOM extensions - these should go away when DicomBytes works
+  /// The underlying [BytesDicomLE] for _this_.
+  @override
+  final Bytes bytes;
+  @override
+  int rIndex;
+  @override
+  int wIndex;
+
+  @override
+  Endian get endian => bytes.endian;
+
+  /// Returns the DICOM Tag Code for _this_.
   int get code {
     final group = getUint16();
     final elt = getUint16();
     return (group << 16) + elt;
   }
 
+  /// Returns the VR Code for _this_.
   int get vrCode => (getUint8() << 8) + getUint8();
 
+  /// Returns the VR Index for _this_.
   int get vrIndex => vrIndexByCode8Bit[vrCode];
 
   /// Returns the DICOM Tag Code at [offset].
   int getCode([int offset = 0]) =>
       (bytes.getUint16(offset) << 16) + bytes.getUint16(offset + 2);
-
-/*
-  /// Reads the DICOM Tag Code at the current [rIndex]. It does not
-  /// move the [rIndex].
-  int peekCode() => getCode(rIndex);
-*/
 
   /// Reads the DICOM Tag Code at the current [rIndex], and advances
   /// the [rIndex] by four _bytes.
@@ -73,6 +78,7 @@ class DicomReadBuffer extends ReadBufferBase with ReadBufferMixin {
     return vrCode;
   }
 
+  /// Returns the VR Index at the current [rIndex].
   int readVRIndex() => vrIndexFromCode(readVRCode());
 
   /// Read a short Value Field Length.
@@ -99,11 +105,11 @@ class DicomReadBuffer extends ReadBufferBase with ReadBufferMixin {
       bool noPadding = false}) {
     length ??= length;
     assert(rIndex.isEven && hasRemaining(4), '@$rIndex : $remaining');
-    final v = bytes.getAscii(
-        offset: rIndex,
-        length: length,
-        allowInvalid: allowInvalid,
-        noPadding: noPadding);
+    var len = length;
+    final buf = bytes.asUint8List(offset, length);
+    if (noPadding && (buf.last == kSpace || buf.last == kNull)) len--;
+    final v =
+        bytes.getAscii(offset: rIndex, length: len, allowInvalid: allowInvalid);
     rIndex += 4;
     return v;
   }
@@ -116,11 +122,13 @@ class DicomReadBuffer extends ReadBufferBase with ReadBufferMixin {
       bool noPadding = false}) {
     length ??= length;
     assert(rIndex.isEven && hasRemaining(4), '@$rIndex : $remaining');
+    var len = length;
+    final buf = bytes.asUint8List(offset, length);
+    if (noPadding && (buf.last == kSpace || buf.last == kNull)) len--;
     final v = bytes.getUtf8(
         offset: rIndex,
-        length: length,
-        allowInvalid: allowInvalid,
-        noPadding: noPadding);
+        length: len,
+        allowInvalid: allowInvalid);
     rIndex += 4;
     return v;
   }

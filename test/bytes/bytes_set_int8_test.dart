@@ -9,28 +9,51 @@ import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:test/test.dart';
 
 void main() {
-
-  group('ByteWriter', () {
-
-    test('Bytes write Int8 Test', () {
+  group('Byte Dicom Writer', () {
+    test('BytesDicomLE write Int8 Test', () {
       const startSize = 1;
-      const iterations = 1024 * 1;
-      final bytes = BytesDicomLE.empty(startSize);
-      print('''
+      const iterations = 1024;
+
+      // All BytesDicomLE must be even length
+      for (var i = 0; i <= iterations - 1; i += 2) {
+        final bytes = BytesDicomLE.empty(i);
+        expect(bytes.offset == 0, true);
+        expect(bytes.length == i, true);
+        print('''
 iterations: $iterations
   index: ${bytes.offset}
   length: ${bytes.length}
 ''');
-
-      expect(bytes.offset == 0, true);
-      expect(bytes.length == startSize, true);
-      for (var i = 0; i <= iterations - 1; i++) {
-        final v = i % 127;
-        bytes.setInt8(i, v);
-        final x = bytes.getInt8(i);
-        expect(v == x, true);
+        for (var j = startSize; j < bytes.length; j++) {
+          final v = i % 127;
+          bytes.setInt8(j, v);
+          final x = bytes.getInt8(j);
+          expect(v == x, true);
+        }
       }
-      expect(bytes.length == iterations, true);
+    });
+
+    test('BytesDicomBE write Int8 Test', () {
+      const startSize = 1;
+      const iterations = 1024;
+
+      // All BytesDicomBE must be even length
+      for (var i = 0; i <= iterations - 1; i += 2) {
+        final bytes = BytesDicomBE.empty(i);
+        expect(bytes.offset == 0, true);
+        expect(bytes.length == i, true);
+        print('''
+iterations: $iterations
+  index: ${bytes.offset}
+  length: ${bytes.length}
+''');
+        for (var j = startSize; j < bytes.length; j++) {
+          final v = i % 127;
+          bytes.setInt8(j, v);
+          final x = bytes.getInt8(j);
+          expect(v == x, true);
+        }
+      }
     });
   });
 }

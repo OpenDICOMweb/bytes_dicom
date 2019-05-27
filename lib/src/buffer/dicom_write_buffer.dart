@@ -10,7 +10,9 @@
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:bytes_buffer/bytes_buffer.dart';
+import 'package:bytes_dicom/src/dicom_constants.dart';
 
 /// A [WriteBuffer] for binary DICOM objects.
 class DicomWriteBuffer extends WriteBuffer {
@@ -80,7 +82,7 @@ class DicomWriteBuffer extends WriteBuffer {
       ..setUint8(4, vrCode >> 8)
       ..setUint8(5, vrCode & 0xFF)
       ..setUint16(6, 0)
-      ..setUint32(8, isUndefinedLength ? _kUndefinedLength : vlf);
+      ..setUint32(8, isUndefinedLength ? kUndefinedLength : vlf);
     wIndex  += 12;
   }
 
@@ -96,4 +98,3 @@ class DicomWriteBuffer extends WriteBuffer {
   }
 }
 
-const _kUndefinedLength = 0xFFFFFFFF;

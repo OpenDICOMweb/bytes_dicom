@@ -8,7 +8,7 @@
 //
 import 'dart:typed_data';
 
-import 'package:bytes/bytes.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:bytes/src/constants.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
@@ -24,7 +24,7 @@ void main() {
     print('vList0: $vList0');
 
     // Typed Data View
-    final bytes0 = Bytes.typedDataView(vList0);
+    final bytes0 =BytesDicomLE.typedDataView(vList0);
     print('bytes0: $bytes0');
     final vList1 = bytes0.asUint16List();
     print('vList1: $vList1');
@@ -47,7 +47,7 @@ void main() {
     expect(vList3[0], equals(vList0[0]));
     expect(vList3[1], equals(vList0[1]));
 
-    final bytes1 = Bytes.typedDataView(vList0);
+    final bytes1 =BytesDicomLE.typedDataView(vList0);
     expect(bytes0 == bytes1, true);
     final vList4 = bytes1.asUint16List();
     expect(vList4, equals(vList3));
@@ -58,7 +58,7 @@ void main() {
   test('Basic Uint16 offset tests', () {
     final vList0 = Uint16List.fromList(intList);
     print('vList0: $vList0');
-    final bytes0 = Bytes.typedDataView(vList0);
+    final bytes0 =BytesDicomLE.typedDataView(vList0);
     print('bytes0: $bytes0');
 
     // Test offset
@@ -91,7 +91,7 @@ void main() {
     print('vList0: $vList0');
     expect(vList0 is Uint16List, true);
 
-    final bytes0 = Bytes.typedDataView(vList0);
+    final bytes0 =BytesDicomLE.typedDataView(vList0);
     print('bytes0: $bytes0');
     expect(bytes0.length, equals(vList0.length * vList0.elementSizeInBytes));
 
@@ -99,7 +99,7 @@ void main() {
     print('vList1: $vList1');
     expect(vList1, equals(vList0));
 
-    final bytes1 = Bytes.typedDataView(vList1);
+    final bytes1 =BytesDicomLE.typedDataView(vList1);
     expect(bytes1.length, equals(vList1.length * vList1.elementSizeInBytes));
 
     final vList2 = bytes1.asUint16List();
@@ -107,7 +107,7 @@ void main() {
     expect(vList2, equals(vList0));
     expect(vList2, equals(vList1));
 
-    final bytes2 = Bytes.typedDataView(vList2);
+    final bytes2 =BytesDicomLE.typedDataView(vList2);
     print('bytes2: $bytes2');
     expect(bytes2.length, equals(vList2.length * vList2.elementSizeInBytes));
 
@@ -139,7 +139,7 @@ void main() {
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Uint16List, true);
 
-      final bytes0 = Bytes.typedDataView(vList0);
+      final bytes0 =BytesDicomLE.typedDataView(vList0);
       print('$k: bytes0: $bytes0');
       expect(bytes0.buffer == vList0.buffer, true);
       expect(bytes0.length, equals(vList0.length * vList0.elementSizeInBytes));
@@ -178,7 +178,7 @@ void main() {
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Uint16List, true);
 
-      final bytes0 = Bytes.typedDataView(vList0);
+      final bytes0 =BytesDicomLE.typedDataView(vList0);
       print('$k: bytes0: $bytes0');
       expect(bytes0.buffer == vList0.buffer, true);
       expect(bytes0.length, equals(vList0.length * vList0.elementSizeInBytes));
@@ -232,7 +232,7 @@ void main() {
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Uint16List, true);
 
-      final bytes0 = Bytes.typedDataView(vList0);
+      final bytes0 =BytesDicomLE.typedDataView(vList0);
       print('bytes0: $bytes0');
       expect(bytes0.buffer == vList0.buffer, true);
       expect(bytes0.length, equals(vList0.length * vList0.elementSizeInBytes));

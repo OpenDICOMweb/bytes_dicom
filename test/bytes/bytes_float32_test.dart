@@ -9,7 +9,7 @@
 
 import 'dart:typed_data';
 
-import 'package:bytes/bytes.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:bytes/src/constants.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
@@ -17,26 +17,19 @@ import 'package:test/test.dart';
 void main() {
 
   final rng = RNG();
-  group('Bytes Float Tests', () {
+  group('BytesDicomLE Float32 Tests', () {
 
-    test('Basic Float32 tests', (){
+    test('BytesDicomLE Float32 tests', (){
       final vList0 = rng.float32List(5, 10);
-      print('vList0: $vList0');
-      final bytes0 = Bytes.typedDataView(vList0);
+      final bytes0 = BytesDicomLE.typedDataView(vList0);
       final vList1 = bytes0.asFloat32List();
-      print('vList1: $vList1');
       expect(vList1, equals(vList0));
+
       final vList2 = bytes0.getFloat32List();
-      print('vList2: $vList2');
       expect(vList2, equals(vList1));
+
       final vList3 = bytes0.asFloat32List();
-      print('vList3: $vList3');
       expect(vList3, equals(vList2));
-
-      final bytes1 = Bytes.typedDataView(vList0);
-      final vList4 = bytes1.asFloat32List();
-      expect(vList4, equals(vList3));
-
     });
 
     //TODO: finish tests
@@ -47,7 +40,7 @@ void main() {
       final box = ByteData(kFloat32Size);
 
       for (var i = 0; i < loopCount; i++) {
-        final a = Bytes.empty(length * kFloat32Size);
+        final a = BytesDicomLE.empty(length * kFloat32Size);
         print('a: $a');
         assert(a.length == length * kFloat32Size, true);
 

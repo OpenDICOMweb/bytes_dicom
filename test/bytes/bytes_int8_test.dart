@@ -9,19 +9,18 @@
 
 import 'dart:typed_data';
 
-import 'package:bytes/bytes.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-
   final rng = RNG();
 //  group('Bytes Float Tests', () {
 
   test('Basic Int8 tests', () {
     final vList0 = rng.int8List(5, 10);
     print('vList0: $vList0');
-    final bytes0 = Bytes.typedDataView(vList0);
+    final bytes0 = BytesDicomLE.typedDataView(vList0);
     final vList1 = bytes0.asInt8List();
     expect(vList1, equals(vList0));
     print('vList1: $vList1');
@@ -32,7 +31,7 @@ void main() {
     print('vList3: $vList3');
     expect(vList3, equals(vList0));
     expect(vList3, equals(vList2));
-    final bytes1 = Bytes.typedDataView(vList0);
+    final bytes1 = BytesDicomLE.typedDataView(vList0);
     final vList4 = bytes1.asInt8List();
     expect(vList4, equals(vList3));
   });
@@ -42,7 +41,7 @@ void main() {
     print('vList0: $vList0');
     expect(vList0 is Int8List, true);
 
-    final bytes0 = Bytes.typedDataView(vList0);
+    final bytes0 = BytesDicomLE.typedDataView(vList0);
     print('bytes0: $bytes0');
     expect(bytes0.length, equals(vList0.length * vList0.elementSizeInBytes));
 
@@ -50,7 +49,7 @@ void main() {
     print('vList1: $vList1');
     expect(vList1, equals(vList0));
 
-    final bytes1 = Bytes.typedDataView(vList1);
+    final bytes1 = BytesDicomLE.typedDataView(vList1);
     expect(bytes1.length, equals(vList1.length * vList1.elementSizeInBytes));
 
     final vList2 = bytes1.asInt8List();
@@ -58,7 +57,7 @@ void main() {
     expect(vList2, equals(vList0));
     expect(vList2, equals(vList1));
 
-    final bytes2 = Bytes.typedDataView(vList2);
+    final bytes2 = BytesDicomLE.typedDataView(vList2);
     print('bytes2: $bytes2');
     expect(bytes2.length, equals(vList2.length * vList2.elementSizeInBytes));
 
@@ -85,39 +84,53 @@ void main() {
 
   test('Int8 asInt8List tests', () {
     const count = 10;
-    for (var k = 0; k < count; k++) {
+    for (var k = 1; k < count; k++) {
       final vList0 = rng.int8List(k, count);
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Int8List, true);
 
-      final bytes0 = Bytes.typedDataView(vList0);
+      final bytes0 = BytesDicomLE.typedDataView(vList0);
       print('$k: bytes0: $bytes0');
       expect(bytes0.buffer == vList0.buffer, true);
-      expect(bytes0.length, equals(vList0.length * vList0.elementSizeInBytes));
+      expect(bytes0.length, equals(vList0.length));
 
-      for (var i = 0; i < vList0.length + 1; i++) {
+      final vList1 = bytes0.buf.buffer.asInt8List();
+      expect(vList1, equals(vList0));
+      for (var i = 0; i < vList0.length; i++)
+        expect(vList1[i], equals(vList0[i]));
+
+      for (var i = 0; i < bytes0.length + 1; i++) {
+        final bytes1 = BytesDicomLE(vList0.buffer.asUint8List());
+        expect(bytes0 == bytes1, true);
         print('i: $i length ${vList0.length - i}');
-        final Int8List vList1 = vList0.sublist(i, vList0.length);
-        expect(vList1.buffer != vList0.buffer, true);
-        print('vList1: $vList1');
-        final Int8List vList2 = vList0.sublist(0, vList0.length - i);
-        expect(vList2.buffer != vList0.buffer, true);
-        print('vList2: $vList2');
+        final bytes2 = bytes1.sublist(i, vList0.length);
+        expect(bytes2.buffer != vList0.buffer, true);
+        print('bytes2: $bytes2');
+        print('buf2: ${bytes2.buf}');
+        final bytes3 = bytes0.asBytes(0, vList0.length - i);
+        print('bytes3: $bytes3');
+        print('buf3: ${bytes3.buf}');
+        expect(bytes3.buffer != bytes2.buffer, true);
+        expect(bytes3.length == bytes2.length, true);
 
         final j = i;
         print('j: $j mid ${bytes0.length - j} length ${bytes0.length}');
 
-        final vList3 = bytes0.asInt8List(j, vList0.length - i);
-        print('vList3: $vList3');
-        expect(vList3, equals(vList1));
-        expect(vList3.buffer == vList0.buffer, true);
-        expect(vList3.buffer == bytes0.buffer, true);
+        final vList2 = bytes0.asInt8List(j, vList0.length - i);
+        print('vList2: $vList2');
+        final bytes4 = BytesDicomLE.typedDataView(vList2);
+        print('Bytes4: $bytes4');
+        print('buf4: ${bytes4.buf}');
+        expect(bytes4 == bytes2, true);
+        expect(bytes4 != bytes3, false);
+        expect(bytes4.buffer == vList0.buffer, true);
+        expect(bytes4.buffer == bytes0.buffer, true);
 
-        final vList4 = bytes0.asInt8List(0, vList0.length - i);
-        print('vList4: $vList4');
-        expect(vList4, equals(vList2));
-        expect(vList3.buffer == vList0.buffer, true);
-        expect(vList4.buffer == bytes0.buffer, true);
+        final vList3 = bytes0.asInt8List(0, vList0.length - i);
+        print('vList3: $vList3');
+        expect(vList3.length, equals(bytes4.length));
+        expect(bytes4.buffer == vList0.buffer, true);
+        expect(vList3.buffer == bytes0.buffer, true);
       }
     }
   });
@@ -129,7 +142,7 @@ void main() {
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Int8List, true);
 
-      final bytes0 = Bytes.typedDataView(vList0);
+      final bytes0 = BytesDicomLE.typedDataView(vList0);
       print('$k: bytes0: $bytes0');
       expect(bytes0.buffer == vList0.buffer, true);
       expect(bytes0.length, equals(vList0.length * vList0.elementSizeInBytes));
@@ -183,7 +196,7 @@ void main() {
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Int8List, true);
 
-      final bytes0 = Bytes.typedDataView(vList0);
+      final bytes0 = BytesDicomLE.typedDataView(vList0);
       print('bytes0: $bytes0');
       expect(bytes0.buffer == vList0.buffer, true);
       expect(bytes0.length, equals(vList0.length * vList0.elementSizeInBytes));
