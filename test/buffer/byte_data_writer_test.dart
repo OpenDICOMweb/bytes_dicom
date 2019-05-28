@@ -15,7 +15,7 @@ void main() {
     test('Buffer Growing Test', () {
       const startSize = 1;
       const iterations = 1024 * 1;
-      final wb = DicomWriteBuffer(startSize);
+      final wb = DicomWriteBuffer.empty(startSize);
       print('''
 iterations: $iterations
   index: ${wb.writeIndex}

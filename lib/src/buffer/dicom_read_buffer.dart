@@ -19,11 +19,10 @@ const _kNull = 0;
 const _kSpace = 32;
 /// A [BytesBuffer] for reading DicomBytes from [BytesDicomLE].
 /// EVR and IVR are taken care of by the underlying [BytesDicomLE].
-class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
+class DicomReadBuffer extends ReadBuffer {
   /// Constructor
-  DicomReadBuffer(this.bytes, [int offset = 0, int length])
-      : rIndex = offset ?? 0,
-        wIndex = length ?? bytes.length;
+  DicomReadBuffer(Bytes bytes, [int offset = 0, int length])
+      : super(bytes, offset, length);
 
 /*
   /// Creates a [ReadBuffer] from another [ReadBuffer].
@@ -34,14 +33,6 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
         rIndex = offset ?? rb.bytes.offset,
         wIndex = length ?? rb.bytes.length;
 */
-
-  /// The underlying [BytesDicomLE] for _this_.
-  @override
-  final Bytes bytes;
-  @override
-  int rIndex;
-  @override
-  int wIndex;
 
   @override
   Endian get endian => bytes.endian;
@@ -82,6 +73,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
   /// Returns _true_ if _this_ is no longer writable.
   bool get isClosed => _isClosed != null;
 
+  /// Close _this_, i.e. make it not readable.
   ByteData close() {
     if (hadTrailingBytes)
       _hadTrailingZeros = _checkAllZeros(wIndex, bytes.length);
@@ -90,8 +82,10 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
     return bd;
   }
 
+  /// Returns _true_ if there are zeros in buffer after last read.
   bool get hadTrailingZeros => _hadTrailingZeros ?? false;
 
+/* Urgent remove after all TODOs complete
   ByteData _rClose() {
     final view = asByteData(0, rIndex);
     if (isNotEmpty) {
@@ -102,12 +96,14 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
     _isClosed = true;
     return view;
   }
+*/
 
   bool _checkAllZeros(int start, int end) {
     for (var i = start; i < end; i++) if (bytes.getUint8(i) != 0) return false;
     return true;
   }
 
+  /// Resets [rIndex] to 0.
   void get reset {
     rIndex = 0;
     _isClosed = false;
@@ -117,7 +113,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
   /// Reads the DICOM Tag Code at the current [rIndex], and advances
   /// the [rIndex] by four _bytes.
   int readCode() {
-    assert(rIndex.isEven && hasRemaining(8), '@$rIndex : $remaining');
+    assert(rIndex.isEven && rHasRemaining(8), '@$rIndex : $readRemaining');
     final code = getCode(rIndex);
     rIndex += 4;
     return code;
@@ -125,7 +121,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
 
   /// Read the VR .
   int readVRCode() {
-    assert(rIndex.isEven && hasRemaining(4), '@$rIndex : $remaining');
+    assert(rIndex.isEven && rHasRemaining(4), '@$rIndex : $readRemaining');
     final vrCode = (bytes.getUint8(rIndex) << 8) + bytes.getUint8(rIndex + 1);
     rIndex += 2;
     return vrCode;
@@ -136,7 +132,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
 
   /// Read a short Value Field Length.
   int readShortVLF() {
-    assert(rIndex.isEven && hasRemaining(2), '@$rIndex : $remaining');
+    assert(rIndex.isEven && rHasRemaining(2), '@$rIndex : $readRemaining');
     final vlf = bytes.getUint16(rIndex);
     rIndex += 2;
     return vlf;
@@ -144,7 +140,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
 
   /// Read a short Value Field Length.
   int readLongVLF() {
-    assert(rIndex.isEven && hasRemaining(4), '@$rIndex : $remaining');
+    assert(rIndex.isEven && rHasRemaining(4), '@$rIndex : $readRemaining');
     final vlf = bytes.getUint32(rIndex);
     rIndex += 4;
     return vlf;
@@ -157,7 +153,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
       bool allowInvalid = true,
       bool noPadding = false}) {
     length ??= length;
-    assert(rIndex.isEven && hasRemaining(4), '@$rIndex : $remaining');
+    assert(rIndex.isEven && rHasRemaining(4), '@$rIndex : $readRemaining');
     var len = length;
     final buf = bytes.asUint8List(offset, length);
     if (noPadding && (buf.last == _kSpace || buf.last == _kNull)) len--;
@@ -174,7 +170,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
       bool allowInvalid = true,
       bool noPadding = false}) {
     length ??= length;
-    assert(rIndex.isEven && hasRemaining(4), '@$rIndex : $remaining');
+    assert(rIndex.isEven && rHasRemaining(4), '@$rIndex : $readRemaining');
     var len = length;
     final buf = bytes.asUint8List(offset, length);
     if (noPadding && (buf.last == _kSpace || buf.last == _kNull)) len--;
