@@ -12,12 +12,14 @@ import 'dart:typed_data';
 import 'package:bytes/bytes.dart';
 import 'package:bytes_buffer/bytes_buffer.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
-import 'package:bytes_dicom/src/bytes/ascii.dart';
+//import 'package:bytes_dicom/src/bytes/ascii.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
 
+const _kNull = 0;
+const _kSpace = 32;
 /// A [BytesBuffer] for reading DicomBytes from [BytesDicomLE].
 /// EVR and IVR are taken care of by the underlying [BytesDicomLE].
-class DicomReadBuffer extends ReadBufferBase with ReadBufferMixin {
+class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
   /// Constructor
   DicomReadBuffer(this.bytes, [int offset = 0, int length])
       : rIndex = offset ?? 0,
@@ -60,6 +62,57 @@ class DicomReadBuffer extends ReadBufferBase with ReadBufferMixin {
   /// Returns the DICOM Tag Code at [offset].
   int getCode([int offset = 0]) =>
       (bytes.getUint16(offset) << 16) + bytes.getUint16(offset + 2);
+
+  //Urgent move below this to DicomReadBuffer
+  /// The underlying [ByteData]
+  @override
+  ByteData get bd => isClosed ? null : bytes.asByteData();
+
+
+  /// Returns _true_ if this reader isClosed and it [isNotEmpty].
+  bool get hadTrailingBytes {
+    if (_isClosed) return isEmpty;
+    return false;
+  }
+
+  bool _hadTrailingZeros = false;
+
+  bool _isClosed = false;
+
+  /// Returns _true_ if _this_ is no longer writable.
+  bool get isClosed => _isClosed != null;
+
+  ByteData close() {
+    if (hadTrailingBytes)
+      _hadTrailingZeros = _checkAllZeros(wIndex, bytes.length);
+    final bd = bytes.asByteData(0, wIndex);
+    _isClosed = true;
+    return bd;
+  }
+
+  bool get hadTrailingZeros => _hadTrailingZeros ?? false;
+
+  ByteData _rClose() {
+    final view = asByteData(0, rIndex);
+    if (isNotEmpty) {
+      rError('End of Data with rIndex($rIndex) != '
+          'length(${view.lengthInBytes})');
+      _hadTrailingZeros = _checkAllZeros(rIndex, wIndex);
+    }
+    _isClosed = true;
+    return view;
+  }
+
+  bool _checkAllZeros(int start, int end) {
+    for (var i = start; i < end; i++) if (bytes.getUint8(i) != 0) return false;
+    return true;
+  }
+
+  void get reset {
+    rIndex = 0;
+    _isClosed = false;
+    _hadTrailingZeros = false;
+  }
 
   /// Reads the DICOM Tag Code at the current [rIndex], and advances
   /// the [rIndex] by four _bytes.
@@ -107,7 +160,7 @@ class DicomReadBuffer extends ReadBufferBase with ReadBufferMixin {
     assert(rIndex.isEven && hasRemaining(4), '@$rIndex : $remaining');
     var len = length;
     final buf = bytes.asUint8List(offset, length);
-    if (noPadding && (buf.last == kSpace || buf.last == kNull)) len--;
+    if (noPadding && (buf.last == _kSpace || buf.last == _kNull)) len--;
     final v =
         bytes.getAscii(offset: rIndex, length: len, allowInvalid: allowInvalid);
     rIndex += 4;
@@ -124,7 +177,7 @@ class DicomReadBuffer extends ReadBufferBase with ReadBufferMixin {
     assert(rIndex.isEven && hasRemaining(4), '@$rIndex : $remaining');
     var len = length;
     final buf = bytes.asUint8List(offset, length);
-    if (noPadding && (buf.last == kSpace || buf.last == kNull)) len--;
+    if (noPadding && (buf.last == _kSpace || buf.last == _kNull)) len--;
     final v = bytes.getUtf8(
         offset: rIndex,
         length: len,
