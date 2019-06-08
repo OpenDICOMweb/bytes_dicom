@@ -10,9 +10,7 @@
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
-import 'package:bytes_buffer/bytes_buffer.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
-//import 'package:bytes_dicom/src/bytes/ascii.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 const _kNull = 0;
