@@ -7,6 +7,7 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'dart:convert' as cvt;
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
@@ -91,4 +92,35 @@ class DicomWriteBuffer extends WriteBuffer {
       ..setUint32(4, vlf);
     wIndex += 8;
   }
+
+  /// Writes a UTF-8 encoding of [s] into _this_ at current [wIndex].
+  @override
+  void writeString(String s) => writeUtf8(s);
+
+  /// Writes a UTF-8 encoding of [s] into _this_ at current [wIndex].
+  void writeUtf8(String s) {
+    writeUint8List(cvt.utf8.encode(s));
+    if (length.isOdd) writeUint8(_kSpace);
+  }
+
+  /// Writes a UTF-8 encoding of [s] into _this_ at current [wIndex].
+  void writeAscii(String s) {
+    writeUint8List(cvt.ascii.encode(s));
+    if (length.isOdd) writeUint8(_kSpace);
+  }
+
+  /// Writes a UTF-8 encoding of [s] into _this_ at current [wIndex].
+  void writeLatin(String s) {
+    writeUint8List(cvt.latin1.encode(s));
+    if (length.isOdd) writeUint8(_kSpace);
+  }
+
+  /// Writes a UTF-8 encoding of [s] into _this_ at current [wIndex].
+  void writeUidString(String s) {
+    writeUint8List(cvt.ascii.encode(s));
+    if (length.isOdd) writeUint8(_kNull);
+  }
 }
+
+const _kNull = 0;
+const _kSpace = 32;

@@ -16,20 +16,14 @@ void main() {
       const startSize = 1;
       const iterations = 1024 * 1;
       final wb = DicomWriteBuffer.empty(startSize);
-      print('''
-iterations: $iterations
-  index: ${wb.writeIndex}
-  length: ${wb.length}
-  maxLength: ${wb.length}
-''');
-
       expect(wb.writeIndex == 0, true);
       expect(wb.length == startSize, true);
+
       for (var i = 0; i <= iterations - 1; i++) {
         final v = i % 127;
         wb.writeInt8(v);
       }
-      print('wb: $wb}\n  length: ${wb.writeIndex}');
+//      print('wb: $wb}\n  length: ${wb.writeIndex}');
       expect(wb.writeIndex == iterations, true);
     });
   });

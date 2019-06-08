@@ -6,6 +6,8 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'dart:typed_data';
+
 import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:bytes_dicom/src/bytes/charset.dart';
@@ -13,7 +15,6 @@ import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-
   final rng = RNG();
 
   group('Bytes Tests', () {
@@ -88,35 +89,9 @@ void main() {
       expect(from0.bytes == bytes, true);
     });
 
-    test('DicomReadBuffer readAscii', () {
-      for (var i = 1; i < 10; i++) {
-        final vList0 = rng.uint8List(1, i);
-        final bytes = BytesDicomLE.typedDataView(vList0);
-        final readBuffer0 = DicomReadBuffer(bytes);
-        print('readBuffer0: $readBuffer0');
-
-        final readAscii0 = readBuffer0.readAscii(length: vList0.length);
-        print('readAscii: $readAscii0');
-        expect(readAscii0 == ascii.decode(vList0), true);
-      }
-    });
-
-    test('ReadBuffer readUtf8', () {
-      for (var i = 1; i < 10; i++) {
-        final vList0 = rng.uint8List(1, i);
-        final bytes = BytesDicomLE.typedDataView(vList0);
-        final readBuffer0 = DicomReadBuffer(bytes);
-        print('readBuffer0: $readBuffer0');
-
-        final readUtf80 = readBuffer0.readUtf8(length: vList0.length);
-        print('readUtf8: $readUtf80');
-        expect(readUtf80 == utf8.decode(vList0), true);
-      }
-    });
-
     test('ReadBuffer readUint8List', () {
       for (var i = 1; i < 10; i++) {
-        final vList0 = rng.uint8List(1, i);
+        final vList0 = rng.uint8List(0, i);
         final bytes = BytesDicomLE.typedDataView(vList0);
         final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
@@ -129,7 +104,7 @@ void main() {
 
     test('ReadBuffer readUint16List', () {
       for (var i = 1; i < 10; i++) {
-        final vList0 = rng.uint16List(1, i);
+        final vList0 = rng.uint16List(0, i);
         final bytes = BytesDicomLE.typedDataView(vList0);
         final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
@@ -141,16 +116,70 @@ void main() {
     });
 
     test('ReadBuffer readUint32List', () {
-      for (var i = 1; i < 10; i++) {
-        final vList0 = rng.uint16List(1, i);
-        final bytes = BytesDicomLE.typedDataView(vList0);
-        final readBuffer0 = DicomReadBuffer(bytes);
-        print('readBuffer0: $readBuffer0');
-
-        final v = readBuffer0.readUint32List(vList0.length);
+      for (var i = 0; i < 100; i++) {
+        final vList0 = rng.uint32List(0, i);
+        final rBuf = getReadBuffer(vList0);
+        final v = rBuf.readUint32List(vList0.length);
         print('readUint32: $v');
         expect(v, equals(vList0));
       }
     });
+
+    test('ReadBuffer readUtf8', () {
+      final vList0 = Uint8List(0);
+      final rBuf = getReadBuffer(vList0);
+      final s = rBuf.readUtf8(vList0.length);
+      print('readUtf8: "$s"');
+      expect(s.isEmpty, true);
+
+      for (var i = 2; i < 10; i += 2) {
+        final vList1 = rng.utf8Bytes(2, i);
+        final rBuf = getReadBuffer(vList1);
+        final s = rBuf.readUtf8(vList1.length);
+        print('readUtf8: "$s"');
+        expect(s.isNotEmpty, true);
+      }
+    });
+
+    test('ReadBuffer readAscii', () {
+      final vList0 = Uint8List(0);
+      final rBuf = getReadBuffer(vList0);
+      final s = rBuf.readAscii(vList0.length);
+      print('readAscii: "$s"');
+      expect(s.isEmpty, true);
+
+      for (var i = 2; i < 10; i += 2) {
+        final vList1 = rng.asciiBytes(2, i);
+        final rBuf = getReadBuffer(vList1);
+        final s = rBuf.readAscii(vList1.length);
+        print('readAscii: "$s"');
+        expect(s.isNotEmpty, true);
+      }
+    });
+
+    test('ReadBuffer readLatin', () {
+      final vList0 = Uint8List(0);
+      final rBuf = getReadBuffer(vList0);
+      final s = rBuf.readLatin(vList0.length);
+      print('readLatin: "$s"');
+      expect(s.isEmpty, true);
+
+      for (var i = 2; i < 10; i += 2) {
+        final vList1 = rng.latinBytes(2, i);
+        final rBuf = getReadBuffer(vList1);
+        final s = rBuf.readLatin(vList1.length);
+        print('readLatin: "$s"');
+        expect(s.isNotEmpty, true);
+      }
+    });
   });
+}
+
+DicomReadBuffer getReadBuffer(TypedData td) {
+  print('vList1 $td');
+  final bytes = BytesDicomLE.typedDataView(td);
+//  print('bytes: $bytes');
+  final rBuf = DicomReadBuffer(bytes);
+//  print('rBuf: $rBuf');
+  return rBuf;
 }

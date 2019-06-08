@@ -17,6 +17,7 @@ import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 const _kNull = 0;
 const _kSpace = 32;
+
 /// A [BytesBuffer] for reading DicomBytes from [BytesDicomLE].
 /// EVR and IVR are taken care of by the underlying [BytesDicomLE].
 class DicomReadBuffer extends ReadBuffer {
@@ -58,7 +59,6 @@ class DicomReadBuffer extends ReadBuffer {
   /// The underlying [ByteData]
   @override
   ByteData get bd => isClosed ? null : bytes.asByteData();
-
 
   /// Returns _true_ if this reader isClosed and it [isNotEmpty].
   bool get hadTrailingBytes {
@@ -147,38 +147,44 @@ class DicomReadBuffer extends ReadBuffer {
   }
 
   /// Read a short Value Field Length.
-  String readAscii(
-      {int offset = 0,
-      int length,
-      bool allowInvalid = true,
-      bool noPadding = false}) {
-    length ??= length;
-    assert(rIndex.isEven && rHasRemaining(4), '@$rIndex : $readRemaining');
-    var len = length;
-    final buf = bytes.asUint8List(offset, length);
-    if (noPadding && (buf.last == _kSpace || buf.last == _kNull)) len--;
+  String readString(int length,
+          {bool allowInvalid = true, bool noPadding = false}) =>
+      readUtf8(length, allowInvalid: allowInvalid, noPadding: noPadding);
+
+  int _getLength(int length) {
+    assert(rIndex.isEven && rHasRemaining(length), '@$rIndex : $readRemaining');
+    if (length <= 0) return length;
+    final char = bytes[rIndex + (length - 1)];
+    return char == _kSpace || char == _kNull ? length - 1 : length;
+  }
+
+  /// Read a short Value Field Length.
+  String readUtf8(int length,
+      {bool allowInvalid = true, bool noPadding = true}) {
+    final len = noPadding ? _getLength(length) : length;
     final v =
-        bytes.getAscii(offset: rIndex, length: len, allowInvalid: allowInvalid);
-    rIndex += 4;
+        bytes.getUtf8(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    rIndex += len;
     return v;
   }
 
   /// Read a short Value Field Length.
-  String readUtf8(
-      {int offset = 0,
-      int length,
-      bool allowInvalid = true,
-      bool noPadding = false}) {
-    length ??= length;
-    assert(rIndex.isEven && rHasRemaining(4), '@$rIndex : $readRemaining');
-    var len = length;
-    final buf = bytes.asUint8List(offset, length);
-    if (noPadding && (buf.last == _kSpace || buf.last == _kNull)) len--;
-    final v = bytes.getUtf8(
-        offset: rIndex,
-        length: len,
-        allowInvalid: allowInvalid);
-    rIndex += 4;
+  String readAscii(int length,
+      {bool allowInvalid = true, bool noPadding = true}) {
+    final len = noPadding ? _getLength(length) : length;
+    final v =
+        bytes.getAscii(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    rIndex += len;
+    return v;
+  }
+
+  /// Read a short Value Field Length.
+  String readLatin(int length,
+      {bool allowInvalid = true, bool noPadding = true}) {
+    final len = noPadding ? _getLength(length) : length;
+    final v =
+        bytes.getLatin(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    rIndex += len;
     return v;
   }
 }
