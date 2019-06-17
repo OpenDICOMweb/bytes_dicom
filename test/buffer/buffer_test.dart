@@ -10,7 +10,6 @@ import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
-import 'package:bytes_dicom/src/bytes/charset.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
@@ -21,7 +20,7 @@ void main() {
     test('DicomReadBuffer', () {
       final vList0 = ['1q221', 'sadaq223'];
       final s = vList0.join('\\');
-      final bytes0 = BytesDicomLE.fromAscii(s);
+      final bytes0 = BytesDicom.fromAscii(s);
       final dReadBuffer0 = DicomReadBuffer(bytes0);
       print('dReadBuffer0:$dReadBuffer0');
 

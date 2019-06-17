@@ -8,12 +8,12 @@
 //
 import 'dart:typed_data';
 
-import 'package:bytes_dicom/bytes_dicom.dart';
+//import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:bytes_dicom/debug/test_utils.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
-import 'buffer_test.dart';
+//import 'buffer_test.dart';
 
 void main() {
   final rng = RNG();

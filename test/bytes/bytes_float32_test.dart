@@ -6,22 +6,27 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-
 import 'dart:typed_data';
 
 import 'package:bytes_dicom/bytes_dicom.dart';
-import 'package:bytes/src/constants.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
+import 'package:test_tools/tools.dart';
 
 void main() {
-
   final rng = RNG();
+  const repetitions = 100;
+  const min = 0;
+  const max = 100;
+
   group('BytesDicomLE Float32 Tests', () {
 
     test('BytesDicomLE Float32 tests', (){
       final vList0 = rng.float32List(5, 10);
-      final bytes0 = BytesDicomLE.typedDataView(vList0);
+      expect(vList0 is Float32List, isTrue);
+
+      final u8LE = getFloat32LE(vList0);
+      final bytes0 = BytesDicomLE.typedDataView(u8LE);
       final vList1 = bytes0.asFloat32List();
       expect(vList1, equals(vList0));
 

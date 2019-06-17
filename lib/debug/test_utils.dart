@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:bytes_dicom/bytes_dicom.dart';
 
-// ignore: public_member_api_docs
+// ignore_for_file: public_member_api_docs
 
 DicomReadBuffer getReadBuffer(TypedData td, [String type = 'LE']) {
   switch (type) {

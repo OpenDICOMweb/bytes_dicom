@@ -6,16 +6,11 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'dart:convert' as cvt;
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
-import 'package:bytes_dicom/src/bytes/charset.dart';
 import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
-
-/*
-const _kNull = 0;
-const _kSpace = 32;
-*/
 
 /// A class ensures that all [Bytes] are of an even length, by adding
 /// a padding character, which defaults to ' ', if necessary.
@@ -37,14 +32,6 @@ abstract class BytesDicom extends Bytes
           ? BytesDicomLE.empty(length)
           : BytesDicomBE.empty(length);
 
-/*
-  /// Returns a view of the specified region of _this_.
-  factory BytesDicom.view(Bytes bytes, [int offset = 0, int length]) =>
-      (bytes.endian == Endian.little)
-          ? BytesDicomLE.view(bytes, offset, length)
-          : BytesDicomBE.view(bytes, offset, length);
-*/
-
   /// Creates a new [Bytes] from [bytes] containing the specified region
   /// and [endian]ness. [endian] defaults to [bytes].[endian].
   factory BytesDicom.from(Bytes bytes,
@@ -65,6 +52,16 @@ abstract class BytesDicom extends Bytes
           : BytesDicomBE.typedDataView(td, offset, length);
 
   @override
+  bool operator ==(Object other) =>
+      (other is Bytes && ignorePadding && _bytesEqual(this, other)) ||
+          __bytesEqual(this, other, ignorePadding);
+
+
+  @override
+  // ignore: unnecessary_overrides
+  int get hashCode => super.hashCode;
+
+  @override
   String getAscii(
       {int offset = 0,
       int length,
@@ -78,27 +75,33 @@ abstract class BytesDicom extends Bytes
       bool allowInvalid = true,
       bool noPadding = false});
 
-/*
-  /// Returns [Bytes] containing the [charset] encoding of [s];
-  factory BytesDicomLE.fromString(String s,
-      [String padChar = ' ', Charset charset = utf8]) =>
-      BytesDicomLE.typedDataView(charset.encode(_maybePad(s, padChar)));
+  @override
+  String toString() => '$runtimeType: offset: $offset length: $length';
 
-  /// Returns [Bytes] containing the UTF-8 encoding of [s];
-  factory BytesDicomLE.fromUtf8(String s, [String padChar = ' ']) =>
-      BytesDicomLE.fromString(s, padChar, utf8);
+  // Urgent: unit test
+  /// Returns a [Bytes] containing the Utf8 decoding of [s].
+  static BytesDicomLE fromAscii(String s, [String padChar = ' ']) =>
+      _stringToBytes(s, cvt.ascii.encode, padChar);
 
-  /// Returns [Bytes] containing the Latin character set encoding of [s];
-  factory BytesDicomLE.fromLatin(String s, [String padChar = ' ']) =>
-      BytesDicomLE.fromString(s, padChar, latin1);
+  // Urgent: unit test
+  /// Returns a [Bytes] containing the Utf8 decoding of [s].
+  static BytesDicomLE fromLatin(String s, [String padChar = ' ']) =>
+      _stringToBytes(s, cvt.latin1.encode, padChar);
 
-  /// Returns a [BytesDicomLE] containing the ASCII encoding of [s].
-  /// If [s].length is odd, [padChar] is appended to [s] before
-  /// encoding it.
-  factory BytesDicomLE.fromAscii(String s, [String padChar = ' ']) =>
-      BytesDicomLE.fromString(s, padChar, ascii);
-*/
+  // Urgent: unit test
+  /// Returns a [Bytes] containing the Utf8 decoding of [s].
+  static BytesDicomLE fromUtf8(String s, [String padChar = ' ']) =>
+      _stringToBytes(s, cvt.utf8.encode, padChar);
 
+  // Urgent: unit test
+  /// Returns a [Bytes] containing the Utf8 decoding of [s].
+  static BytesDicomLE fromString(String s, [String padChar = ' ']) =>
+      fromUtf8(s, padChar);
+
+  // Urgent: unit test
+  /// Returns a [Bytes] containing the Base64 decoding of [s].
+  static BytesDicomLE fromBase64(String s, [String padChar = ' ']) =>
+      _stringToBytes(s, cvt.base64.decode, padChar);
 }
 
 /// A class ensures that all [Bytes] are of an even length, by adding
@@ -120,29 +123,6 @@ class BytesDicomLE extends BytesLittleEndian
   BytesDicomLE.typedDataView(TypedData td, [int offset = 0, int length])
       : super.typedDataView(td, offset, length ?? td.lengthInBytes);
 
-  /// Returns [Bytes] containing the [charset] encoding of [s];
-  factory BytesDicomLE.fromString(String s,
-          [String padChar = ' ', Charset charset = utf8]) =>
-      BytesDicomLE.typedDataView(charset.encode(_maybePad(s, padChar)));
-
-  /// Returns [Bytes] containing the UTF-8 encoding of [s];
-  factory BytesDicomLE.fromUtf8(String s, [String padChar = ' ']) =>
-      BytesDicomLE.fromString(s, padChar, utf8);
-
-  /// Returns [Bytes] containing the Latin character set encoding of [s];
-  factory BytesDicomLE.fromLatin(String s, [String padChar = ' ']) =>
-      BytesDicomLE.fromString(s, padChar, latin1);
-
-  /// Returns a [BytesDicomLE] containing the ASCII encoding of [s].
-  /// If [s].length is odd, [padChar] is appended to [s] before
-  /// encoding it.
-  factory BytesDicomLE.fromAscii(String s, [String padChar = ' ']) =>
-      BytesDicomLE.fromString(s, padChar, ascii);
-
-  @override
-  bool operator ==(Object other) =>
-      (other is Bytes && ignorePadding && _bytesEqual(this, other)) ||
-      __bytesEqual(this, other, ignorePadding);
 }
 
 /// A class ensures that all [Bytes] are of an even length, by adding
@@ -163,29 +143,6 @@ class BytesDicomBE extends BytesBigEndian
   /// region and [endian]ness.  [endian] defaults to [Endian.little].
   BytesDicomBE.typedDataView(TypedData td, [int offset = 0, int length])
       : super.typedDataView(td, offset, length ?? td.lengthInBytes);
-
-  /// Returns [Bytes] containing the [charset] encoding of [s];
-  factory BytesDicomBE.fromString(String s,
-          [String padChar = ' ', Charset charset = utf8]) =>
-      BytesDicomBE.typedDataView(charset.encode(_maybePad(s, padChar)));
-
-  /// Returns [Bytes] containing the UTF-8 encoding of [s];
-  factory BytesDicomBE.fromUtf8(String s, [String padChar = ' ']) =>
-      BytesDicomBE.fromString(s, padChar, utf8);
-
-  /// Returns [Bytes] containing the Latin character set encoding of [s];
-  factory BytesDicomBE.fromLatin(String s, [String padChar = ' ']) =>
-      BytesDicomBE.fromString(s, padChar, latin1);
-
-  /// Returns a [BytesDicomBE] containing the ASCII encoding of [s].
-  /// If [s].length is odd, [padChar] is appended to [s] before
-  /// encoding it.
-  factory BytesDicomBE.fromAscii(String s, [String padChar = ' ']) =>
-      BytesDicomBE.fromString(s, padChar, ascii);
-  @override
-  bool operator ==(Object other) =>
-      (other is Bytes && ignorePadding && _bytesEqual(this, other)) ||
-      __bytesEqual(this, other, ignorePadding);
 }
 
 mixin DicomBytesPrimitives {
@@ -194,7 +151,25 @@ mixin DicomBytesPrimitives {
   int get vfLengthField => throw UnsupportedError('Not supported.');
 }
 
-String _maybePad(String s, String p) => s.length.isOdd ? '$s$p' : s;
+// Urgent: unit test
+/// Returns a [Bytes] containing the Base64 decoding of [s].
+BytesDicomLE _stringToBytes(
+    String s, Uint8List decoder(String s), String padChar) {
+  if (s.isEmpty) return Bytes.kEmptyBytes;
+  var bList = decoder(s);
+  if (padChar != null) {
+    final bLength = bList.length;
+    if (bLength.isOdd && padChar != null) {
+      // Performance: It would be good to eliminate this copy
+      final nList = Uint8List(bLength + 1);
+      for (var i = 0; i < bLength - 1; i++)
+        nList[i] = bList[i];
+      nList[bLength] = padChar.codeUnitAt(0);
+      bList = nList;
+    }
+  }
+  return Bytes.typedDataView(bList);
+}
 
 bool _bytesEqual(Bytes a, Bytes b) {
   final aLen = a.length;

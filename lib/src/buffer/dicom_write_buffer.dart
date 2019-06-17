@@ -11,8 +11,8 @@ import 'dart:convert' as cvt;
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
+import 'package:bytes/bytes_buffer.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
-import 'package:bytes_buffer/bytes_buffer.dart';
 import 'package:bytes_dicom/src/dicom_constants.dart';
 
 /// A [WriteBuffer] for binary DICOM objects.

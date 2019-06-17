@@ -42,11 +42,18 @@ void main() {
     test('DicomReadBuffer BytesDicomBE Int64 tests', () {
       for (var i = 0; i < repetitions; i++) {
         final vList0 = rng.int64List(min, max);
-        final rBuf0 = getReadBufferBE(vList0);
+        final bd = ByteData(vList0.length * 8);
+        for (var j = 0; j < vList0.length; j++) {
+          print('vList0[$i] ${vList0[i]}');
+          bd.setInt64(j, vList0[i], Endian.big);
+        }
+        final rBuf0 = getReadBufferBE(bd);
 
         final out = Int64List(vList0.length);
         for (var j = 0; j < vList0.length; j++) {
           final v = rBuf0.readInt64();
+          print('        v $v');
+          print('vList0[$j] ${vList0[j]}');
           expect(v, equals(vList0[j]));
           out[j] = v;
         }

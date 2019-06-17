@@ -10,6 +10,7 @@
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
+import 'package:bytes/bytes_buffer.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
 
@@ -145,8 +146,9 @@ class DicomReadBuffer extends ReadBuffer {
   }
 
   /// Read a short Value Field Length.
+  @override
   String readString(int length,
-          {bool allowInvalid = true, bool noPadding = false}) =>
+          {bool allowInvalid = false, bool noPadding = false}) =>
       readUtf8(length, allowInvalid: allowInvalid, noPadding: noPadding);
 
   int _getLength(int length) {

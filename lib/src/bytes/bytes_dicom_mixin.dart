@@ -26,7 +26,6 @@ mixin DicomBytesMixin {
   int get length;
   int get vfOffset;
   int get vfLengthField;
-  Uint8List asUint8List([int offset = 0, int length]);
 
   int operator [](int offset);
   int getUint8(int offset);
@@ -159,11 +158,11 @@ mixin DicomBytesMixin {
           bool removePadding = false}) =>
       _getString(
           offset, length ?? buf.length, allowInvalid, removePadding, charset);
-
+/*
   /// Returns a [List<String>]. This is done by first decoding
   /// the specified region as _UTF-8_, and then _split_ing the
   /// resulting [String] using the [separator].
-/*
+
   List<String> getStringList(
       {int offset = 0,
       int length,
@@ -401,6 +400,8 @@ mixin DicomBytesMixin {
   }
 
   // Urgent: are these really needed??
+  // Urgent: this sort of thing should be handled in bytes_buffer_dicom
+/*
   void writeInt8VF(List<int> vList) => setInt8List(vfOffset, vList);
   void writeInt16VF(List<int> vList) => setInt16List(vfOffset, vList);
   void writeInt32VF(List<int> vList) => setInt32List(vfOffset, vList);
@@ -437,19 +438,14 @@ mixin DicomBytesMixin {
     }
     return index;
   }
-// Urgent remove above if not needed
+*/
 
-/*
-  // Allows the removal of padding characters.
+  /// Allows the removal of padding characters.
   Uint8List asUint8List([int offset = 0, int length, int padChar = 0]) {
     assert(padChar == null || padChar == _kSpace || padChar == _kNull);
     final len = (length ??= buf.length) - offset;
     return buf.buffer.asUint8List(buf.offsetInBytes + offset, len);
   }
-*/
-
-  @override
-  String toString() => '$runtimeType: offset: $offset length: $length';
 
   static const int _kGroupOffset = 0;
   static const int _kEltOffset = 0;

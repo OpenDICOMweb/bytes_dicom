@@ -11,7 +11,7 @@ environment:
 dependencies:
   bytes:
     path: C:/odw/sdk/bytes
-    version: ^0.7.0
+    version: ^0.7.6
 
 dev_dependencies:
   benchmark_harness: any
