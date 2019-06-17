@@ -12,13 +12,12 @@ import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
 
 /// Explicit Little Endian Element with short (16-bit) Value Field Length.
-mixin EvrShortBytesMixin {
+mixin EvrShortBytes {
   Uint8List get buf;
   int getUint8(int offset);
   int getUint16(int offset);
   void setUint8(int offset, int value);
   void setUint16(int offset, int value);
-  /// Returns _true_.
   bool get isEvr => true;
 
   int get vrOffset => 4;
@@ -56,7 +55,7 @@ mixin EvrShortBytesMixin {
 }
 
 /// Explicit Little Endian [Bytes] with long (32-bit) Value Field Length.
-mixin EvrLongBytesMixin {
+mixin EvrLongBytes {
   Uint8List get buf;
   int getUint8(int offset);
   int getUint32(int offset);

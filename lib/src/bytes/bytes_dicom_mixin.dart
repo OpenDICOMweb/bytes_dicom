@@ -161,7 +161,7 @@ mixin DicomBytesMixin {
 /*
   /// Returns a [List<String>]. This is done by first decoding
   /// the specified region as _UTF-8_, and then _split_ing the
-  /// resulting [String] using the [separator].
+  /// resulting [String] using the _backslash_ character.
 
   List<String> getStringList(
       {int offset = 0,
@@ -178,13 +178,12 @@ mixin DicomBytesMixin {
   }
 */
 
-/*
   List<String> getStringList(
       {int offset = 0,
       int length,
       bool allowInvalid = true,
-      String separator = '\\',
       Charset charset = utf8,
+        String separator = '\\',
       bool removePadding = true}) {
     final s = getString(
         offset: offset,
@@ -192,9 +191,8 @@ mixin DicomBytesMixin {
         allowInvalid: allowInvalid,
         removePadding: removePadding,
         charset: charset);
-    return (s.isEmpty) ? <String>[] : s.split(separator);
+    return (s.isEmpty) ? <String>[] : s.split('\\');
   }
-*/
 
   String getAscii(
           {int offset = 0,
@@ -205,7 +203,7 @@ mixin DicomBytesMixin {
 
   /// Returns a [List<String>]. This is done by first decoding
   /// the specified region as _ASCII_, and then _split_ing the
-  /// resulting [String] using the [separator]. Also allows the
+  /// resulting [String] using the _backslash_ character. Also allows the
   /// removal of a padding character.
   List<String> getAsciiList(
       {int offset = 0,
@@ -218,7 +216,7 @@ mixin DicomBytesMixin {
         length: length,
         allowInvalid: allowInvalid,
         noPadding: noPadding);
-    return (s.isEmpty) ? <String>[] : s.split(separator);
+    return (s.isEmpty) ? <String>[] : s.split('\\');
   }
 
   /// Returns a [String] containing a _UTF-8_ decoding of the specified region.
@@ -232,7 +230,7 @@ mixin DicomBytesMixin {
 
   /// Returns a [List<String>]. This is done by first decoding
   /// the specified region as _UTF-8_, and then _split_ing the
-  /// resulting [String] using the [separator].
+  /// resulting [String] using the _backslash_ character.
   List<String> getUtf8List(
       {int offset = 0,
       int length,
@@ -240,7 +238,7 @@ mixin DicomBytesMixin {
       String separator = '\\'}) {
     final s =
         getUtf8(offset: offset, length: length, allowInvalid: allowInvalid);
-    return (s.isEmpty) ? <String>[] : s.split(separator);
+    return (s.isEmpty) ? <String>[] : s.split('\\');
   }
 
   /// Decoding the bytes in the specified region as _Latin1_ to _latin9_
@@ -255,7 +253,7 @@ mixin DicomBytesMixin {
 
   /// Returns a [List<String>]. This is done by first decoding
   /// the specified region as _UTF-8_, and then _split_ing the
-  /// resulting [String] using the [separator].
+  /// resulting [String] using the _backslash_ character.
   List<String> getLatinList(
       {int offset = 0,
       int length,
@@ -263,7 +261,7 @@ mixin DicomBytesMixin {
       String separator = '\\'}) {
     final s =
         getLatin(offset: offset, length: length, allowInvalid: allowInvalid);
-    return (s.isEmpty) ? <String>[] : s.split(separator);
+    return (s.isEmpty) ? <String>[] : s.split('\\');
   }
 
   // **** Primitive Setters
@@ -401,7 +399,6 @@ mixin DicomBytesMixin {
 
   // Urgent: are these really needed??
   // Urgent: this sort of thing should be handled in bytes_buffer_dicom
-/*
   void writeInt8VF(List<int> vList) => setInt8List(vfOffset, vList);
   void writeInt16VF(List<int> vList) => setInt16List(vfOffset, vList);
   void writeInt32VF(List<int> vList) => setInt32List(vfOffset, vList);
@@ -438,7 +435,6 @@ mixin DicomBytesMixin {
     }
     return index;
   }
-*/
 
   /// Allows the removal of padding characters.
   Uint8List asUint8List([int offset = 0, int length, int padChar = 0]) {

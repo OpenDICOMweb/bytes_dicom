@@ -19,6 +19,12 @@ abstract class BytesDicom extends Bytes
   @override
   Endian get endian;
 
+  /// Returns _true_ if _this_ is Explicit VR.
+  bool get isEvr;
+
+  /// Returns the offset to the Value Field Length field.
+  int get vfLengthOffset;
+
   /// Creates a new [BytesDicomLE] from [buf].
   factory BytesDicom(Uint8List buf, [Endian endian = Endian.little]) =>
       (endian == Endian.little) ? BytesDicomLE(buf) : BytesDicomBE(buf);
@@ -54,8 +60,7 @@ abstract class BytesDicom extends Bytes
   @override
   bool operator ==(Object other) =>
       (other is Bytes && ignorePadding && _bytesEqual(this, other)) ||
-          __bytesEqual(this, other, ignorePadding);
-
+      __bytesEqual(this, other, ignorePadding);
 
   @override
   // ignore: unnecessary_overrides
@@ -78,30 +83,65 @@ abstract class BytesDicom extends Bytes
   @override
   String toString() => '$runtimeType: offset: $offset length: $length';
 
-  // Urgent: unit test
-  /// Returns a [Bytes] containing the Utf8 decoding of [s].
-  static BytesDicomLE fromAscii(String s, [String padChar = ' ']) =>
-      _stringToBytes(s, cvt.ascii.encode, padChar);
+  /// A DicomBytes with length 0.
+  static BytesDicom kEmpty = Bytes.kEmptyBytes;
 
   // Urgent: unit test
   /// Returns a [Bytes] containing the Utf8 decoding of [s].
-  static BytesDicomLE fromLatin(String s, [String padChar = ' ']) =>
-      _stringToBytes(s, cvt.latin1.encode, padChar);
+  static BytesDicomLE fromAscii(String s,
+          [int maxLength, String padChar = ' ']) =>
+      _stringToBytes(s, maxLength ?? s.length, padChar, cvt.ascii.encode);
+
+  /// Returns a [Bytes] containing the ASCII encoding of [list].
+  static BytesLittleEndian fromAsciiList(List<String> list,
+          [int maxLength, String padChar = ' ']) =>
+      _listToBytes(list, maxLength, padChar, cvt.ascii.encode);
 
   // Urgent: unit test
   /// Returns a [Bytes] containing the Utf8 decoding of [s].
-  static BytesDicomLE fromUtf8(String s, [String padChar = ' ']) =>
-      _stringToBytes(s, cvt.utf8.encode, padChar);
+  static BytesDicomLE fromLatin(String s,
+          [int maxLength, String padChar = ' ']) =>
+      _stringToBytes(s, maxLength ?? s.length, padChar, cvt.ascii.encode);
+
+  /// Returns a [Bytes] containing the Latin encoding of [list].
+  static BytesLittleEndian fromLatinList(List<String> list,
+          [int maxLength, String padChar = ' ']) =>
+      _listToBytes(list, maxLength, padChar, cvt.ascii.encode);
 
   // Urgent: unit test
   /// Returns a [Bytes] containing the Utf8 decoding of [s].
-  static BytesDicomLE fromString(String s, [String padChar = ' ']) =>
-      fromUtf8(s, padChar);
+  static BytesDicomLE fromUtf8(String s,
+          [int maxLength, String padChar = ' ']) =>
+      _stringToBytes(s, maxLength ?? s.length, padChar, cvt.utf8.encode);
+
+  /// Returns a [Bytes] containing the ASCII encoding of [list].
+  static BytesLittleEndian fromUtf8List(List<String> list,
+          [int maxLength, String padChar = ' ']) =>
+      _listToBytes(list, maxLength, padChar, cvt.ascii.encode);
+
+  /// Returns a [Uint8List] corresponding to a binary Value Field.
+  static Bytes fromTextList(Iterable<String> list) {
+    if (list.isEmpty) return BytesDicom.kEmpty;
+    if (list.length != 1) throw ArgumentError('Text has only one value:$list');
+    return fromUtf8List(list);
+  }
+
+  // Urgent: unit test
+  /// Returns a [Bytes] containing the Utf8 decoding of [s].
+  static BytesDicomLE fromString(String s,
+          [int maxLength, String padChar = ' ', Uint8List decoder(String s)]) =>
+      fromString(s, maxLength ?? s.length, padChar, decoder);
+
+  /// Returns a [Bytes] containing the ASCII encoding of [list].
+  static BytesLittleEndian fromStringList(List<String> list,
+          [int maxLength, String padChar = ' ', Uint8List decoder(String s)]) =>
+      _listToBytes(list, maxLength, padChar, decoder);
 
   // Urgent: unit test
   /// Returns a [Bytes] containing the Base64 decoding of [s].
-  static BytesDicomLE fromBase64(String s, [String padChar = ' ']) =>
-      _stringToBytes(s, cvt.base64.decode, padChar);
+  static BytesDicomLE fromBase64(String s,
+          [int maxLength, String padChar = ' ']) =>
+      _stringToBytes(s, maxLength ?? s.length, padChar, cvt.ascii.encode);
 }
 
 /// A class ensures that all [Bytes] are of an even length, by adding
@@ -122,7 +162,6 @@ class BytesDicomLE extends BytesLittleEndian
   /// region and [endian]ness.  [endian] defaults to [Endian.little].
   BytesDicomLE.typedDataView(TypedData td, [int offset = 0, int length])
       : super.typedDataView(td, offset, length ?? td.lengthInBytes);
-
 }
 
 /// A class ensures that all [Bytes] are of an even length, by adding
@@ -154,7 +193,7 @@ mixin DicomBytesPrimitives {
 // Urgent: unit test
 /// Returns a [Bytes] containing the Base64 decoding of [s].
 BytesDicomLE _stringToBytes(
-    String s, Uint8List decoder(String s), String padChar) {
+    String s, int maxLength, String padChar, Uint8List decoder(String s)) {
   if (s.isEmpty) return Bytes.kEmptyBytes;
   var bList = decoder(s);
   if (padChar != null) {
@@ -162,13 +201,19 @@ BytesDicomLE _stringToBytes(
     if (bLength.isOdd && padChar != null) {
       // Performance: It would be good to eliminate this copy
       final nList = Uint8List(bLength + 1);
-      for (var i = 0; i < bLength - 1; i++)
-        nList[i] = bList[i];
+      for (var i = 0; i < bLength - 1; i++) nList[i] = bList[i];
       nList[bLength] = padChar.codeUnitAt(0);
       bList = nList;
     }
   }
   return Bytes.typedDataView(bList);
+}
+
+/// Returns a [Bytes] containing a decoding of [list].
+BytesLittleEndian _listToBytes(List<String> list, int maxLength, String padChar,
+    Uint8List decoder(String s)) {
+  final s = list.join('\\').trimLeft();
+  return _stringToBytes(s, maxLength, padChar, decoder);
 }
 
 bool _bytesEqual(Bytes a, Bytes b) {

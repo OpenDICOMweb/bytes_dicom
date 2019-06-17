@@ -24,16 +24,6 @@ class DicomReadBuffer extends ReadBuffer {
   DicomReadBuffer(Bytes bytes, [int offset = 0, int length])
       : super(bytes, offset, length);
 
-/*
-  /// Creates a [ReadBuffer] from another [ReadBuffer].
-  DicomReadBuffer.from(DicomReadBuffer rb, [int offset = 0, int length])
-      : bytes = (rb.endian == Endian.little)
-      ? BytesDicomLE.from(rb.bytes, offset, length)
-  : BytesDicomLE.from(rb.bytes, offset, length),
-        rIndex = offset ?? rb.bytes.offset,
-        wIndex = length ?? rb.bytes.length;
-*/
-
   @override
   Endian get endian => bytes.endian;
 
@@ -145,7 +135,40 @@ class DicomReadBuffer extends ReadBuffer {
     return vlf;
   }
 
-  /// Read a short Value Field Length.
+  /// Read a String Value Field.
+  @override
+  String readAscii(int length,
+      {bool allowInvalid = true, bool noPadding = true}) {
+    final len = noPadding ? _getLength(length) : length;
+    final s =
+        bytes.getAscii(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    rIndex += length;
+    return s;
+  }
+
+  /// Read a String Value Field.
+  @override
+  String readLatin(int length,
+      {bool allowInvalid = true, bool noPadding = true}) {
+    final len = noPadding ? _getLength(length) : length;
+    final s =
+        bytes.getLatin(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    rIndex += length;
+    return s;
+  }
+
+  /// Read a String Value Field.
+  @override
+  String readUtf8(int length,
+      {bool allowInvalid = true, bool noPadding = true}) {
+    final len = noPadding ? _getLength(length) : length;
+    final s =
+        bytes.getUtf8(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    rIndex += length;
+    return s;
+  }
+
+  /// Read a String Value Field.
   @override
   String readString(int length,
           {bool allowInvalid = false, bool noPadding = false}) =>
@@ -153,38 +176,8 @@ class DicomReadBuffer extends ReadBuffer {
 
   int _getLength(int length) {
     assert(rIndex.isEven && rHasRemaining(length), '@$rIndex : $readRemaining');
-    if (length <= 0) return length;
+    if (length <= 0) throw ArgumentError();
     final char = bytes[rIndex + (length - 1)];
     return char == _kSpace || char == _kNull ? length - 1 : length;
-  }
-
-  /// Read a short Value Field Length.
-  String readUtf8(int length,
-      {bool allowInvalid = true, bool noPadding = true}) {
-    final len = noPadding ? _getLength(length) : length;
-    final v =
-        bytes.getUtf8(offset: rIndex, length: len, allowInvalid: allowInvalid);
-    rIndex += len;
-    return v;
-  }
-
-  /// Read a short Value Field Length.
-  String readAscii(int length,
-      {bool allowInvalid = true, bool noPadding = true}) {
-    final len = noPadding ? _getLength(length) : length;
-    final v =
-        bytes.getAscii(offset: rIndex, length: len, allowInvalid: allowInvalid);
-    rIndex += len;
-    return v;
-  }
-
-  /// Read a short Value Field Length.
-  String readLatin(int length,
-      {bool allowInvalid = true, bool noPadding = true}) {
-    final len = noPadding ? _getLength(length) : length;
-    final v =
-        bytes.getLatin(offset: rIndex, length: len, allowInvalid: allowInvalid);
-    rIndex += len;
-    return v;
   }
 }

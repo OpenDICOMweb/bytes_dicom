@@ -6,39 +6,47 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'dart:typed_data';
+
 import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
 import 'package:bytes_dicom/src/bytes/to_string_mixin.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 /// Implicit Little Endian [Bytes] with short (16-bit) Value Field Length.
-class IvrBytesLE extends BytesLittleEndian with DicomBytesMixin, ToStringMixin {
-  /// Creates an [IvrBytesLE] Element of length.
-  IvrBytesLE(int length)
+class IvrBytes extends BytesLittleEndian with DicomBytesMixin, ToStringMixin {
+  /// Returns an [IvrBytes] containing [list].
+  IvrBytes(Uint8List list)
+      : assert(list.length.isEven),
+        super(list);
+
+  /// Creates an empty [IvrBytes] of [length].
+  IvrBytes.empty(int length)
       : assert(length.isEven),
         super.empty(length);
 
-  /// Create an [IvrBytesLE] Element from [Bytes].
-  IvrBytesLE.from(Bytes bytes, int start, int end)
+  /// Create an [IvrBytes] Element from [Bytes].
+  IvrBytes.from(Bytes bytes, int start, int end)
       : assert(bytes.length.isEven),
         super.from(bytes, start, end);
 
-  /// Create an [IvrBytesLE] Element from a view of [Bytes].
-  IvrBytesLE.view(Bytes bytes, [int start = 0, int end])
+  /// Create an [IvrBytes] Element from a view of [Bytes].
+  IvrBytes.view(Bytes bytes, [int start = 0, int end])
       : assert(length.isEven),
         super.view(bytes, start, end);
 
-  /// Returns an [IvrBytesLE] with an empty Value Field.
-  factory IvrBytesLE.element(int code, int vrCode, int vfLength) {
+  /// Returns an [IvrBytes] with an empty Value Field.
+  factory IvrBytes.element(int code, int vrCode, int vfLength) {
     assert(vfLength.isEven);
-    return IvrBytesLE(kVFOffset + vfLength)..setHeader(code, vfLength, vrCode);
+    return IvrBytes.empty(kVFOffset + vfLength)
+      ..setHeader(code, vfLength, vrCode);
   }
 
-  /// Creates an [IvrBytesLE].
-  factory IvrBytesLE.makeFromBytes(int code, int vrCode, Bytes vfBytes) {
+  /// Creates an [IvrBytes].
+  factory IvrBytes.makeFromBytes(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
-    return IvrBytesLE(kVFOffset + vfLength)
+    return IvrBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode)
       ..setUint8List(kVFOffset, vfBytes.buf);
   }
@@ -80,8 +88,8 @@ class IvrBytesLE extends BytesLittleEndian with DicomBytesMixin, ToStringMixin {
   /// An error occurs if [start] is outside the range 0 .. [length],
   /// or if [end] is outside the range [start] .. [length].
   @override
-  IvrBytesLE sublist([int start = 0, int end]) =>
-      IvrBytesLE.from(this, start, (end ?? length) - start);
+  IvrBytes sublist([int start = 0, int end]) =>
+      IvrBytes.from(this, start, (end ?? length) - start);
 
   /// The offset of the Value Field in an IVR Element
   static const int kVFOffset = 8;

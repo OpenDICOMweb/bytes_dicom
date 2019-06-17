@@ -6,6 +6,8 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'dart:typed_data';
+
 import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
 import 'package:bytes_dicom/src/bytes/to_string_mixin.dart';
@@ -13,9 +15,14 @@ import 'package:bytes_dicom/src/bytes/evr_bytes_mixin.dart';
 
 /// Explicit Little Endian Element with short (16-bit) Value Field Length.
 class EvrShortLEBytes extends BytesLittleEndian
-    with DicomBytesMixin, EvrShortBytesMixin, ToStringMixin {
-  /// Returns an [EvrShortLEBytes].
-  EvrShortLEBytes(int length)
+    with DicomBytesMixin, EvrShortBytes, ToStringMixin {
+  /// Returns an [EvrShortLEBytes] containing [list].
+  EvrShortLEBytes(Uint8List list)
+      : assert(list.length.isEven),
+        super(list);
+
+  /// Returns an empty [EvrShortLEBytes] with length [length].
+  EvrShortLEBytes.empty(int length)
       : assert(length.isEven),
         super.empty(length);
 
@@ -32,7 +39,7 @@ class EvrShortLEBytes extends BytesLittleEndian
   /// Returns an [EvrShortLEBytes] with an empty Value Field.
   factory EvrShortLEBytes.element(int code, int vrCode, int vfLength) {
     assert(vfLength.isEven);
-    final e = EvrShortLEBytes(kVFOffset + vfLength)
+    final e = EvrShortLEBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
     return e;
   }
@@ -42,7 +49,7 @@ class EvrShortLEBytes extends BytesLittleEndian
   factory EvrShortLEBytes.fromVFBytes(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
-    final e = EvrShortLEBytes(kVFOffset + vfLength)
+    final e = EvrShortLEBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode)
       ..setUint8List(kVFOffset, vfBytes.buf);
     return e;
@@ -62,9 +69,14 @@ class EvrShortLEBytes extends BytesLittleEndian
 
 /// Explicit Little Endian [Bytes] with long (32-bit) Value Field Length.
 class EvrLongLEBytes extends BytesLittleEndian
-    with DicomBytesMixin, EvrLongBytesMixin, ToStringMixin {
-  /// Creates an [EvrLongLEBytes] of [length].
-  EvrLongLEBytes(int length)
+    with DicomBytesMixin, EvrLongBytes, ToStringMixin {
+  /// Returns an [EvrLongLEBytes] containing [list].
+  EvrLongLEBytes(Uint8List list)
+      : assert(list.length.isEven),
+        super(list);
+
+  /// Creates an empty [EvrLongLEBytes] of [length].
+  EvrLongLEBytes.empty(int length)
       : assert(length.isEven),
         super.empty(length);
 
@@ -81,7 +93,7 @@ class EvrLongLEBytes extends BytesLittleEndian
   /// Returns an [EvrLongLEBytes] with an empty Value Field.
   factory EvrLongLEBytes.element(int code, int vrCode, int vfLength) {
     assert(vfLength.isEven);
-    final e = EvrLongLEBytes(kVFOffset + vfLength)
+    final e = EvrLongLEBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
     return e;
   }
@@ -90,7 +102,7 @@ class EvrLongLEBytes extends BytesLittleEndian
   factory EvrLongLEBytes.fromVFBytes(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
-    final e = EvrLongLEBytes(kVFOffset + vfLength)
+    final e = EvrLongLEBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode)
       ..setUint8List(kVFOffset, vfBytes.buf);
     return e;

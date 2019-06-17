@@ -6,6 +6,8 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'dart:typed_data';
+
 import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
 import 'package:bytes_dicom/src/bytes/evr_bytes_mixin.dart';
@@ -13,9 +15,10 @@ import 'package:bytes_dicom/src/bytes/to_string_mixin.dart';
 
 /// Explicit Little Endian Element with short (16-bit) Value Field Length.
 class EvrShortBEBytes extends BytesBigEndian
-    with DicomBytesMixin, EvrShortBytesMixin, ToStringMixin {
-  /// Returns an [EvrShortBEBytes].
-  EvrShortBEBytes(int length)
+    with DicomBytesMixin, EvrShortBytes, ToStringMixin {
+
+  /// Returns an empty [EvrShortBEBytes] with length [length].
+  EvrShortBEBytes.empty(int length)
       : assert(length.isEven),
         super.empty(length);
 
@@ -32,7 +35,7 @@ class EvrShortBEBytes extends BytesBigEndian
   /// Returns an [EvrShortBEBytes] with an empty Value Field.
   factory EvrShortBEBytes.element(int code, int vrCode, int vfLength) {
     assert(vfLength.isEven);
-    final e = EvrShortBEBytes(kVFOffset + vfLength)
+    final e = EvrShortBEBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
     return e;
   }
@@ -42,7 +45,7 @@ class EvrShortBEBytes extends BytesBigEndian
   factory EvrShortBEBytes.fromVFBytes(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
-    final e = EvrShortBEBytes(kVFOffset + vfLength)
+    final e = EvrShortBEBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode)
       ..setUint8List(kVFOffset, vfBytes.buf);
     return e;
@@ -61,36 +64,41 @@ class EvrShortBEBytes extends BytesBigEndian
 }
 
 /// Explicit Little Endian [Bytes] with long (32-bit) Value Field Length.
-class EvrLongLBBytes extends BytesBigEndian
-    with DicomBytesMixin, EvrLongBytesMixin, ToStringMixin {
-  /// Creates an [EvrLongLBBytes] of [length].
-  EvrLongLBBytes(int length)
+class EvrLongBEBytes extends BytesBigEndian
+    with DicomBytesMixin, EvrLongBytes, ToStringMixin {
+  /// Returns an [EvrLongBEBytes] containing [list].
+  EvrLongBEBytes(Uint8List list)
+      : assert(list.length.isEven),
+        super(list);
+
+  /// Returns an empty [EvrLongBEBytes] with length [length].
+  EvrLongBEBytes.empty(int length)
       : assert(length.isEven),
         super.empty(length);
 
-  /// Creates an [EvrLongLBBytes] from [Bytes].
-  EvrLongLBBytes.from(Bytes bytes, [int start = 0, int end])
+  /// Creates an [EvrLongBEBytes] from [Bytes].
+  EvrLongBEBytes.from(Bytes bytes, [int start = 0, int end])
       : assert(bytes.length.isEven),
         super.from(bytes, start, end);
 
-  /// Creates an [EvrLongLBBytes] from a view of [Bytes].
-  EvrLongLBBytes.view(Bytes bytes, [int start = 0, int end])
+  /// Creates an [EvrLongBEBytes] from a view of [Bytes].
+  EvrLongBEBytes.view(Bytes bytes, [int start = 0, int end])
       : assert(bytes.length.isEven),
         super.view(bytes, start, end);
 
-  /// Returns an [EvrLongLBBytes] with an empty Value Field.
-  factory EvrLongLBBytes.element(int code, int vrCode, int vfLength) {
+  /// Returns an [EvrLongBEBytes] with an empty Value Field.
+  factory EvrLongBEBytes.element(int code, int vrCode, int vfLength) {
     assert(vfLength.isEven);
-    final e = EvrLongLBBytes(kVFOffset + vfLength)
+    final e = EvrLongBEBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
     return e;
   }
 
-  /// Creates an [EvrLongLBBytes].
-  factory EvrLongLBBytes.fromVFBytes(int code, int vrCode, Bytes vfBytes) {
+  /// Creates an [EvrLongBEBytes].
+  factory EvrLongBEBytes.fromVFBytes(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
-    final e = EvrLongLBBytes(kVFOffset + vfLength)
+    final e = EvrLongBEBytes.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode)
       ..setUint8List(kVFOffset, vfBytes.buf);
     return e;
@@ -101,8 +109,8 @@ class EvrLongLBBytes extends BytesBigEndian
   /// An error occurs if [start] is outside the range 0 .. [length],
   /// or if [end] is outside the range [start] .. [length].
   @override
-  EvrLongLBBytes sublist([int start = 0, int end]) =>
-      EvrLongLBBytes.from(this, start, (end ?? length) - start);
+  EvrLongBEBytes sublist([int start = 0, int end]) =>
+      EvrLongBEBytes.from(this, start, (end ?? length) - start);
 
   /// The offset to the Value Field.
   static const int kVFOffset = 12;
