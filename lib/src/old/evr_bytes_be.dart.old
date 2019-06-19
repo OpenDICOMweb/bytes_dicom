@@ -1,0 +1,121 @@
+//  Copyright (c) 2016, 2017, 2018,
+//  Poplar Hill Informatics and the American College of Radiology
+//  All rights reserved.
+//  Use of this source code is governed by the open source license
+//  that can be found in the odw/LICENSE file.
+//  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
+//  See the AUTHORS file for other contributors.
+//
+import 'dart:typed_data';
+
+import 'package:bytes_dicom/bytes_dicom.dart';
+import 'package:bytes_dicom/src/bytes/element_interface.dart';
+import 'package:bytes_dicom/src/bytes/evr_bytes_mixin.dart';
+import 'package:bytes_dicom/src/bytes/to_string_mixin.dart';
+
+/// Explicit Little Endian Element with short (16-bit) Value Field Length.
+class BytesBEShortEvr extends BytesDicomBE
+    with EvrShortBytes, BytesDicomMixin, EvrMixin, ToStringMixin
+    implements ElementInterface {
+  /// Returns an [BytesLEShortEvr] containing [buf].
+  BytesBEShortEvr(Uint8List buf) : super(buf);
+
+  /// Returns an empty [BytesBEShortEvr] with length [length].
+  BytesBEShortEvr.empty(int length) : super.empty(length);
+
+  /// Returns an [BytesBEShortEvr] created from [bytes].
+  BytesBEShortEvr.from(Bytes bytes, [int offset = 0, int length])
+      : super.from(bytes, offset, length);
+
+  /// Creates a new [BytesBEShortEvr] from a [TypedData] containing
+  /// the specified region.
+  BytesBEShortEvr.typedDataView(TypedData td, [int offset = 0, int length])
+      : super.typedDataView(td, offset, length);
+
+  /// Returns an [BytesBEShortEvr] created from a view of [bytes].
+  factory BytesBEShortEvr.view(Bytes bytes, [int offset = 0, int length]) =>
+      BytesBEShortEvr.typedDataView(bytes.asUint8List(offset, length));
+
+  /// Returns an [BytesBEShortEvr] with an empty Value Field.
+  factory BytesBEShortEvr.element(int code, int vrCode, int vfLength) {
+    assert(vfLength.isEven);
+    final e = BytesBEShortEvr.empty(kVFOffset + vfLength)
+      ..setHeader(code, vfLength, vrCode);
+    return e;
+  }
+
+  /// Returns an [BytesBEShortEvr] created from a view
+  /// of a Value Field ([vfBytes]).
+  factory BytesBEShortEvr.fromVFBytes(int code, int vrCode, Bytes vfBytes) {
+    final vfLength = vfBytes.length;
+    assert(vfLength.isEven);
+    final e = BytesBEShortEvr.empty(kVFOffset + vfLength)
+      ..setHeader(code, vfLength, vrCode)
+      ..setUint8List(kVFOffset, vfBytes.buf);
+    return e;
+  }
+
+  /// Returns a copy of _this_ containing the bytes from [start] inclusive
+  /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
+  /// An error occurs if [start] is outside the range 0 .. [length],
+  /// or if [end] is outside the range [start] .. [length].
+  @override
+  BytesBEShortEvr sublist([int start = 0, int end]) =>
+      BytesBEShortEvr.from(this, start, (end ?? length) - start);
+
+  /// The Value Field offset.
+  static const int kVFOffset = 8;
+}
+
+/// Explicit Little Endian [Bytes] with long (32-bit) Value Field Length.
+class BytesBELongEvr extends BytesDicomBE
+    with EvrLongBytes, BytesDicomMixin, EvrMixin, ToStringMixin
+    implements ElementInterface {
+  /// Returns an [BytesLEShortEvr] containing [buf].
+  BytesBELongEvr(Uint8List buf) : super(buf);
+
+  /// Returns an empty [BytesBEShortEvr] with length [length].
+  BytesBELongEvr.empty(int length) : super.empty(length);
+
+  /// Returns an [BytesBEShortEvr] created from [bytes].
+  BytesBELongEvr.from(Bytes bytes, [int offset = 0, int length])
+      : super.from(bytes, offset, length);
+
+  /// Creates a new [BytesBELongEvr] from a [TypedData] containing
+  /// the specified region.
+  BytesBELongEvr.typedDataView(TypedData td, [int offset = 0, int length])
+      : super.typedDataView(td, offset, length);
+
+  /// Returns an [BytesBEShortEvr] created from a view of [bytes].
+  factory BytesBELongEvr.view(Bytes bytes, [int offset = 0, int length]) =>
+      BytesBELongEvr.typedDataView(bytes.asUint8List(offset, length));
+
+  /// Returns an [BytesBELongEvr] with an empty Value Field.
+  factory BytesBELongEvr.element(int code, int vrCode, int vfLength) {
+    assert(vfLength.isEven);
+    final e = BytesBELongEvr.empty(kVFOffset + vfLength)
+      ..setHeader(code, vfLength, vrCode);
+    return e;
+  }
+
+  /// Creates an [BytesBELongEvr].
+  factory BytesBELongEvr.fromVFBytes(int code, int vrCode, Bytes vfBytes) {
+    final vfLength = vfBytes.length;
+    assert(vfLength.isEven);
+    final e = BytesBELongEvr.empty(kVFOffset + vfLength)
+      ..setHeader(code, vfLength, vrCode)
+      ..setUint8List(kVFOffset, vfBytes.buf);
+    return e;
+  }
+
+  /// Returns a copy of _this_ containing the bytes from [start] inclusive
+  /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
+  /// An error occurs if [start] is outside the range 0 .. [length],
+  /// or if [end] is outside the range [start] .. [length].
+  @override
+  BytesBELongEvr sublist([int start = 0, int end]) =>
+      BytesBELongEvr.from(this, start, (end ?? length) - start);
+
+  /// The offset to the Value Field.
+  static const int kVFOffset = 12;
+}

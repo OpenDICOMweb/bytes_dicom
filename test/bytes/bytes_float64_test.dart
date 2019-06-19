@@ -14,14 +14,12 @@ import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
-
   final rng = RNG();
   group('Bytes Float64 Tests', () {
-
-    test('Basic Float64 tests', (){
+    test('Basic Float64 tests', () {
       final vList0 = rng.float64List(5, 10);
       print('vList0: $vList0');
-      final bytes0 =BytesDicomLE.typedDataView(vList0);
+      final bytes0 = BytesLEShortEvr.typedDataView(vList0);
       final vList1 = bytes0.asFloat64List();
       print('vList1: $vList1');
       expect(vList1, equals(vList0));
@@ -32,10 +30,9 @@ void main() {
       print('vList3: $vList3');
       expect(vList3, equals(vList2));
 
-      final bytes1 =BytesDicomLE.typedDataView(vList0);
+      final bytes1 = BytesLEShortEvr.typedDataView(vList0);
       final vList4 = bytes1.asFloat64List();
       expect(vList4, equals(vList3));
-
     });
 
     //TODO: finish tests
@@ -46,7 +43,7 @@ void main() {
       final box = ByteData(kFloat64Size);
 
       for (var i = 0; i < loopCount; i++) {
-        final a =BytesDicomLE.empty(length * kFloat64Size);
+        final a = BytesLEShortEvr.empty(length * kFloat64Size);
         print('a: $a');
         assert(a.length == length * kFloat64Size, true);
 

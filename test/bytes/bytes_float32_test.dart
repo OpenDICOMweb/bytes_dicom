@@ -19,14 +19,14 @@ void main() {
   const min = 0;
   const max = 100;
 
-  group('BytesDicomLE Float32 Tests', () {
+  group('BytesLEShortEvr Float32 Tests', () {
 
-    test('BytesDicomLE Float32 tests', (){
+    test('BytesLEShortEvr Float32 tests', (){
       final vList0 = rng.float32List(5, 10);
       expect(vList0 is Float32List, isTrue);
 
       final u8LE = getFloat32LE(vList0);
-      final bytes0 = BytesDicomLE.typedDataView(u8LE);
+      final bytes0 = BytesLEShortEvr.typedDataView(u8LE);
       final vList1 = bytes0.asFloat32List();
       expect(vList1, equals(vList0));
 
@@ -45,7 +45,7 @@ void main() {
       final box = ByteData(kFloat32Size);
 
       for (var i = 0; i < loopCount; i++) {
-        final a = BytesDicomLE.empty(length * kFloat32Size);
+        final a = BytesLEShortEvr.empty(length * kFloat32Size);
         print('a: $a');
         assert(a.length == length * kFloat32Size, true);
 

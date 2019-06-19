@@ -39,7 +39,7 @@ void main() {
 
     test('ReadBuffer', () {
       final vList0 = rng.uint8List(1, 10);
-      final bytes = BytesDicomLE.typedDataView(vList0);
+      final bytes = BytesLEShortEvr.typedDataView(vList0);
       final readBuffer0 = DicomReadBuffer(bytes);
       print('readBuffer0: $readBuffer0');
 
@@ -65,7 +65,7 @@ void main() {
 
     test('DicomReadBuffer.from', () {
       final vList0 = rng.uint8List(1, 10);
-      final bytes = BytesDicomLE.typedDataView(vList0);
+      final bytes = BytesLEShortEvr.typedDataView(vList0);
       final readBuffer0 = DicomReadBuffer(bytes);
       print('DicomReadBuffer0: $readBuffer0');
 
@@ -91,7 +91,7 @@ void main() {
     test('ReadBuffer readUint8List', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint8List(0, i);
-        final bytes = BytesDicomLE.typedDataView(vList0);
+        final bytes = BytesLEShortEvr.typedDataView(vList0);
         final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
@@ -104,7 +104,7 @@ void main() {
     test('ReadBuffer readUint16List', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint16List(0, i);
-        final bytes = BytesDicomLE.typedDataView(vList0);
+        final bytes = BytesLEShortEvr.typedDataView(vList0);
         final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
@@ -176,7 +176,7 @@ void main() {
 
 DicomReadBuffer getReadBuffer(TypedData td) {
   print('vList1 $td');
-  final bytes = BytesDicomLE.typedDataView(td);
+  final bytes = BytesLEShortEvr.typedDataView(td);
 //  print('bytes: $bytes');
   final rBuf = DicomReadBuffer(bytes);
 //  print('rBuf: $rBuf');

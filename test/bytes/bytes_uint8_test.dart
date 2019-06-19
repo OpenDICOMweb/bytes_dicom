@@ -81,8 +81,8 @@ void main() {
   });
 
   test('Uint8 asUint8List tests', () {
-    const count = 10;
-    for (var k = 0; k < count; k++) {
+    const count = 20;
+    for (var k = 0; k < count; k += 2) {
       final vList0 = rng.uint8List(k, count);
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Uint8List, true);
@@ -124,8 +124,8 @@ void main() {
   });
 
   test('Uint8 sublist tests', () {
-    const count = 10;
-    for (var k = 0; k < count; k++) {
+    const count = 20;
+    for (var k = 0; k < count; k += 2) {
       final vList0 = rng.uint8List(k, count);
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Uint8List, true);
@@ -178,8 +178,8 @@ void main() {
   });
 
   test('Uint8 view tests', () {
-    const count = 10;
-    for (var k = 0; k < count; k++) {
+    const count = 20;
+    for (var k = 0; k < count; k += 2) {
       final vList0 = rng.uint8List(k, count);
       print('$k: vList0:(${vList0.length}) $vList0');
       expect(vList0 is Uint8List, true);

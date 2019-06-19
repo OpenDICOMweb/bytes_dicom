@@ -10,12 +10,7 @@ export 'package:bytes/bytes_buffer.dart';
 
 export 'package:bytes_dicom/src/bytes/bytes_dicom.dart';
 export 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
-export 'package:bytes_dicom/src/bytes/charset.dart';
-export 'package:bytes_dicom/src/bytes/evr_bytes_be.dart';
-export 'package:bytes_dicom/src/bytes/evr_bytes_le.dart';
-export 'package:bytes_dicom/src/bytes/evr_bytes_mixin.dart';
-export 'package:bytes_dicom/src/bytes/ivr_bytes.dart';
 export 'package:bytes/src/constants.dart';
 
-export 'package:bytes_dicom/src/buffer/dicom_read_buffer.dart';
-export 'package:bytes_dicom/src/buffer/dicom_write_buffer.dart';
+export 'package:bytes_dicom/src/buffer/buffer_dicom_read.dart';
+export 'package:bytes_dicom/src/buffer/buffer_dicom_write.dart';

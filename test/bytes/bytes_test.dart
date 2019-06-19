@@ -206,7 +206,7 @@ void main() {
     });
 
     test('bytes fromByteData', () {
-      final list0 = rng.uint8List(1, 1);
+      final list0 = rng.uint8List(2, 2);
       final bd = list0.buffer.asByteData();
       final byteFD0 = BytesDicomLE.typedDataView(bd);
       print('byteFD0: $byteFD0');

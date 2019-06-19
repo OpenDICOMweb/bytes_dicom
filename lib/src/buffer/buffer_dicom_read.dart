@@ -140,8 +140,7 @@ class DicomReadBuffer extends ReadBuffer {
   String readAscii(int length,
       {bool allowInvalid = true, bool noPadding = true}) {
     final len = noPadding ? _getLength(length) : length;
-    final s =
-        bytes.getAscii(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    final s = bytes.getAscii(rIndex, len);
     rIndex += length;
     return s;
   }
@@ -151,8 +150,7 @@ class DicomReadBuffer extends ReadBuffer {
   String readLatin(int length,
       {bool allowInvalid = true, bool noPadding = true}) {
     final len = noPadding ? _getLength(length) : length;
-    final s =
-        bytes.getLatin(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    final s = bytes.getLatin(rIndex, len);
     rIndex += length;
     return s;
   }
@@ -162,8 +160,7 @@ class DicomReadBuffer extends ReadBuffer {
   String readUtf8(int length,
       {bool allowInvalid = true, bool noPadding = true}) {
     final len = noPadding ? _getLength(length) : length;
-    final s =
-        bytes.getUtf8(offset: rIndex, length: len, allowInvalid: allowInvalid);
+    final s = bytes.getUtf8(rIndex, len);
     rIndex += length;
     return s;
   }
@@ -172,7 +169,7 @@ class DicomReadBuffer extends ReadBuffer {
   @override
   String readString(int length,
           {bool allowInvalid = false, bool noPadding = false}) =>
-      readUtf8(length, allowInvalid: allowInvalid, noPadding: noPadding);
+      readUtf8(length, noPadding: noPadding);
 
   int _getLength(int length) {
     assert(rIndex.isEven && rHasRemaining(length), '@$rIndex : $readRemaining');
