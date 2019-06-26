@@ -12,117 +12,18 @@ import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/src/bytes/element_interface.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
 
-const _kSpace = 32;
-
 const _kUndefinedLength = 0xFFFFFFFF;
 
 mixin BytesDicomMixin {
   Uint8List get buf;
   int get vfOffset;
   int get vfLengthOffset;
-  int get vfLength;
-
-
-  int getUint16(int offset);
-  bool checkVFLengthField(int vlf, int vfLength);
-  Bytes asBytes([int offset, int length]);
-  int setInt8List(int start, List<int> vList, [int offset = 0, int length]);
-  int setInt16List(int start, List<int> vList, [int offset = 0, int length]);
-  int setInt32List(int start, List<int> vList, [int offset = 0, int length]);
-  int setInt64List(int start, List<int> vList, [int offset = 0, int length]);
-  int setUint8List(int start, List<int> list, [int offset = 0, int length]);
-  int setUint16List(int start, List<int> vList, [int offset = 0, int length]);
-  int setUint32List(int start, List<int> vList, [int offset = 0, int length]);
-  int setUint64List(int start, List<int> vList, [int offset = 0, int length]);
-  int setFloat32List(int start, List<double> vList,
-      [int offset = 0, int length]);
-  int setFloat64List(int start, List<double> vList,
-      [int offset = 0, int length]);
-
-  int setAsciiList(int start, List<String> sList, [int padChar = _kSpace]);
-  int setLatinList(int start, List<String> sList, [int padChar = _kSpace]);
-  int setUtf8List(int start, List<String> sList, [int padChar]);
-  int setUtf8(int start, String s, [int padChar = _kSpace]);
-
-  /// Returns the Value Field bytes.
-  Bytes get vfBytes => asBytes(vfOffset, vfLength);
-
-
-  // Urgent: are these really needed??
-  // Urgent: this sort of thing should be handled in bytes_buffer_dicom
-  int writeInt8VF(List<int> vList) => setInt8List(vfOffset, vList);
-  int writeInt16VF(List<int> vList) => setInt16List(vfOffset, vList);
-  int writeInt32VF(List<int> vList) => setInt32List(vfOffset, vList);
-  int writeInt64VF(List<int> vList) => setInt64List(vfOffset, vList);
-
-  int writeUint8VF(List<int> vList) =>
-      setUint8List(vfOffset, vList, 0, vList.length);
-  int writeUint16VF(List<int> vList) => setUint16List(vfOffset, vList);
-  int writeUint32VF(List<int> vList) => setUint32List(vfOffset, vList);
-  int writeUint64VF(List<int> vList) => setUint64List(vfOffset, vList);
-
-  int writeFloat32VF(List<double> vList) => setFloat32List(vfOffset, vList);
-  int writeFloat64VF(List<double> vList) => setFloat64List(vfOffset, vList);
-
-  int writeAsciiVF(List<String> vList, [int pad = _kSpace]) =>
-      setAsciiList(vfOffset, vList, pad);
-  int writeLatinVF(List<String> vList, [int pad = _kSpace]) =>
-      setLatinList(vfOffset, vList, pad);
-  int writeUtf8VF(List<String> vList, [int pad = _kSpace]) =>
-      setUtf8List(vfOffset, vList, pad);
-  int writeTextVF(List<String> vList, [int pad = _kSpace]) =>
-      setUtf8(vfOffset, vList[0], pad);
-}
-
-mixin EvrMixin {
-  Uint8List get buf;
-  int get vfOffset;
-  int get vfLengthOffset;
   int getUint8(int offset);
-  void setUint8(int offset, int value);
   int getUint32(int offset);
-  void setUint16(int offset, int value);
   bool checkVFLengthField(int vlf, int vfLength);
   Bytes asBytes([int offset, int length]);
-/*
-  Uint8List get buf;
-  int get vfOffset;
-  int get vfLengthOffset;
 
-  int getUint16(int offset);
-  void setUint8(int offset, int value);
-  void setUint16(int offset, int value);
-  bool checkVFLengthField(int vlf, int vfLength);
-
-  int setInt8List(int start, List<int> vList, [int offset = 0, int length]);
-  int setInt16List(int start, List<int> vList, [int offset = 0, int length]);
-  int setInt32List(int start, List<int> vList, [int offset = 0, int length]);
-  int setInt64List(int start, List<int> vList, [int offset = 0, int length]);
-  int setUint8List(int start, List<int> list,
-      [int offset = 0, int length, int pad]);
-  int setUint16List(int start, List<int> vList, [int offset = 0, int length]);
-  int setUint32List(int start, List<int> vList, [int offset = 0, int length]);
-  int setUint64List(int start, List<int> vList, [int offset = 0, int length]);
-  int setFloat32List(int start, List<double> vList,
-      [int offset = 0, int length]);
-  int setFloat64List(int start, List<double> vList,
-      [int offset = 0, int length]);
-
-  int setAsciiList(int start, List<String> sList, [int padChar = _kSpace]);
-  int setUtf8List(int start, List<String> sList, [int padChar]);
-  int setUtf8(int start, String s, [int padChar = _kSpace]);
-*/
-
-  int get vrOffset => 4;
-
-  // TODO replace with 16 bit version??
-  int get vrCode => (getUint8(vrOffset) << 8) + getUint8(vrOffset + 1);
-
-  /// Returns the internal VR index of _this_.
-  int get vrIndex => vrIndexFromCode(vrCode);
-
-  ///  Returns the identifier of the VR of _this_.
-  String get vrId => vrIdFromIndex(vrIndex);
+  // **** End of interface
 
   /// Returns _true_ if [vfLengthField] equals the DICOM
   /// Undefined Length value (0xFFFFFFFF).
@@ -151,43 +52,32 @@ mixin EvrMixin {
     final len = buf.length;
     return (len == 0) ? null : getUint8(len - 1);
   }
-/*
+}
 
-  int get vfLengthField {
-    final vlf = getUint16(vfLengthOffset);
-    assert(checkVFLengthField(vlf, vfLength) == true);
-    return vlf;
-  }
+mixin EvrMixin {
+  Uint8List get buf;
+  int get vfOffset;
+  int get vfLengthOffset;
+  int getUint8(int offset);
+  void setUint8(int offset, int value);
+  int getUint32(int offset);
+  void setUint16(int offset, int value);
+  bool checkVFLengthField(int vlf, int vfLength);
+  Bytes asBytes([int offset, int length]);
 
-  @override
-  int get vfLength => buf.length - vfOffset;
+  // **** End of interface
 
-  /// Returns the Value Field bytes.
-  Bytes get vfBytes => asBytes(vfOffset, vfLength);
+  bool get isEvr => true;
+  int get vrOffset => 4;
 
-  // Urgent: are these really needed??
-  // Urgent: this sort of thing should be handled in bytes_buffer_dicom
-  void writeInt8VF(List<int> vList) => setInt8List(vfOffset, vList);
-  void writeInt16VF(List<int> vList) => setInt16List(vfOffset, vList);
-  void writeInt32VF(List<int> vList) => setInt32List(vfOffset, vList);
-  void writeInt64VF(List<int> vList) => setInt64List(vfOffset, vList);
+  // TODO replace with 16 bit version??
+  int get vrCode => (getUint8(vrOffset) << 8) + getUint8(vrOffset + 1);
 
-  void writeUint8VF(List<int> vList) =>
-      setUint8List(vfOffset, vList, 0, vList.length);
-  void writeUint16VF(List<int> vList) => setUint16List(vfOffset, vList);
-  void writeUint32VF(List<int> vList) => setUint32List(vfOffset, vList);
-  void writeUint64VF(List<int> vList) => setUint64List(vfOffset, vList);
+  /// Returns the internal VR index of _this_.
+  int get vrIndex => vrIndexFromCode(vrCode);
 
-  void writeFloat32VF(List<double> vList) => setFloat32List(vfOffset, vList);
-  void writeFloat64VF(List<double> vList) => setFloat64List(vfOffset, vList);
-
-  void writeAsciiVF(List<String> vList, [int pad = _kSpace]) =>
-      setAsciiList(vfOffset, vList, pad);
-  void writeUtf8VF(List<String> vList, [int pad = _kSpace]) =>
-      setUtf8List(vfOffset, vList, pad);
-  void writeTextVF(List<String> vList, [int pad = _kSpace]) =>
-      setUtf8(vfOffset, vList[0], pad);
-*/
+  ///  Returns the identifier of the VR of _this_.
+  String get vrId => vrIdFromIndex(vrIndex);
 }
 
 /// Explicit Little Endian Element with short (16-bit) Value Field Length.
@@ -245,6 +135,31 @@ mixin EvrLongBytes implements ElementInterface {
 
   /// The offset to the Value Field.
   static const int kVFOffset = 12;
+}
+
+/// Explicit Little Endian Element with short (16-bit) Value Field Length.
+mixin IvrBytes implements ElementInterface {
+  void setUint16(int offset, int value);
+  void setUint32(int offset, int value);
+
+  /// The byte offset from the beginning of the Element
+  /// to the Value Length Field.
+  @override
+  int get vfLengthOffset => 4;
+
+  /// The offset to the Value Field
+  @override
+  int get vfOffset => kVFOffset;
+
+  /// Write a short EVR header.
+  void setHeader(int code, int vrCode, int vlf) {
+    setUint16(0, code >> 16);
+    setUint16(2, code & 0xFFFF);
+    setUint32(6, vlf);
+  }
+
+  /// The Value Field offset.
+  static const int kVFOffset = 8;
 }
 
 mixin ToStringMixin {

@@ -18,6 +18,8 @@ abstract class ElementInterface {
   /// Returns _true_ if _this_ is Explicit VR.
   bool get isEvr;
 
+  /// The Tag Code for this Element
+  int get code;
   /// The offset in _this_ to the VR field.
   int get vrOffset;
 
@@ -60,6 +62,9 @@ mixin ElementMixin {
   Uint8List get buf;
   int get vfLengthField;
   int get vfOffset;
+  bool get isEvr;
+  int get code;
+  int get vrIndex;
 
   int getUint8(int offset);
   Bytes asBytes(int vfOffset, int vfLength);

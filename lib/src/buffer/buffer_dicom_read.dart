@@ -9,7 +9,6 @@
 //
 import 'dart:typed_data';
 
-import 'package:bytes/bytes.dart';
 import 'package:bytes/bytes_buffer.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
@@ -21,21 +20,21 @@ const _kSpace = 32;
 /// EVR and IVR are taken care of by the underlying [BytesDicomLE].
 class DicomReadBuffer extends ReadBuffer {
   /// Constructor
-  DicomReadBuffer(Bytes bytes, [int offset = 0, int length])
-      : super(bytes, offset, length);
+  DicomReadBuffer(BytesDicom bytes, [int offset = 0, int length])
+      : super(bytes.asBytes(offset, length));
 
   @override
   Endian get endian => bytes.endian;
 
   /// Returns the DICOM Tag Code for _this_.
   int get code {
-    final group = getUint16();
-    final elt = getUint16();
+    final group = bytes.getUint16(0);
+    final elt = bytes.getUint16(2);
     return (group << 16) + elt;
   }
 
   /// Returns the VR Code for _this_.
-  int get vrCode => (getUint8() << 8) + getUint8();
+  int get vrCode => (bytes.getUint8(4) << 8) + bytes.getUint8(5);
 
   /// Returns the VR Index for _this_.
   int get vrIndex => vrIndexByCode8Bit[vrCode];
@@ -135,6 +134,10 @@ class DicomReadBuffer extends ReadBuffer {
     return vlf;
   }
 
+  /// Gets the Uint32 value at [rIndex], compares it with [target] and
+  /// returns the result.
+  bool getUint32AndCompare(int target) => target == bytes.getUint32(rIndex);
+
   /// Read a String Value Field.
   @override
   String readAscii(int length,
@@ -174,7 +177,10 @@ class DicomReadBuffer extends ReadBuffer {
   int _getLength(int length) {
     assert(rIndex.isEven && rHasRemaining(length), '@$rIndex : $readRemaining');
     if (length <= 0) throw ArgumentError();
-    final char = bytes[rIndex + (length - 1)];
-    return char == _kSpace || char == _kNull ? length - 1 : length;
+    final c = bytes[rIndex + (length - 1)];
+    return c == _kSpace || c == _kNull ? length - 1 : length;
   }
+
+
+
 }
