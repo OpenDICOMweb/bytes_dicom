@@ -9,8 +9,8 @@
 export 'package:bytes/bytes_buffer.dart';
 
 export 'package:bytes_dicom/src/bytes/bytes_dicom.dart';
-export 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
-export 'package:bytes_dicom/src/bytes/element_interface.dart';
+export 'package:bytes_dicom/src/element/bytes_element.dart';
+export 'package:bytes_dicom/src/element/element_interface.dart';
 export 'package:bytes/src/constants.dart';
 
 export 'package:bytes_dicom/src/buffer/buffer_dicom_read.dart';

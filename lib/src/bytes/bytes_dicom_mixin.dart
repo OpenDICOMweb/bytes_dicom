@@ -8,181 +8,74 @@
 //
 import 'dart:typed_data';
 
-import 'package:bytes/bytes.dart';
-import 'package:bytes_dicom/src/bytes/element_interface.dart';
-import 'package:bytes_dicom/src/vr/vr_base.dart';
-
-const _kUndefinedLength = 0xFFFFFFFF;
-
-mixin BytesDicomMixin {
+mixin BytesDicomGetMixin {
   Uint8List get buf;
-  int get vfOffset;
-  int get vfLengthOffset;
   int getUint8(int offset);
+  int getUint16(int offset);
   int getUint32(int offset);
-  bool checkVFLengthField(int vlf, int vfLength);
-  Bytes asBytes([int offset, int length]);
+  Uint8List getUint8List([int offset = 0, int length]);
 
-  // **** End of interface
+  // **** get methods
+  /// Gets the DICOM Tag Code at [offset].
+  int getCode([int offset = 0]) =>
+      getUint16(offset) << 16 + getUint16(offset + 2);
 
-  /// Returns _true_ if [vfLengthField] equals the DICOM
-  /// Undefined Length value (0xFFFFFFFF).
-  bool get hasUndefinedLength => vfLengthField == _kUndefinedLength;
+  /// Returns the value in the VR field of _this_.
+  int getVRCode([int offset = 0]) =>
+      getUint8(offset + 4) << 8 + getUint8(offset + 5);
 
-  /// Returns the Value length field of _this_.
-  int get vfLengthField {
-    final vlf = getUint32(vfLengthOffset);
-    assert(checkVFLengthField(vlf, vfLength));
-    return vlf;
-  }
+  /// Returns the value of the Value Field Length for a short Element.
+  int getShortVLF([int offset = 6]) => getUint16(offset);
 
-  /// Returns the actual length of the Value Field.
-  int get vfLength => buf.length - vfOffset;
+  /// Returns the value of the Value Field Length for a long Element.
+  int getLongVLF([int offset = 8]) => getUint32(offset);
 
-  /// Returns the Value Field bytes.
-  Bytes get vfBytes => asBytes(vfOffset, vfLength);
+  /// Returns the value of the Value Field for a short Element.
+  Uint8List getShortVF([int offset = 8, int length]) =>
+      getUint8List(offset, length ?? buf.length);
 
-  /// Returns the Value Field as a Uint8List.
-  Uint8List get vfUint8List =>
-      buf.buffer.asUint8List(buf.offsetInBytes + vfOffset, vfLength);
-
-  /// Returns the last Uint8 element in [vfBytes], if [vfBytes]
-  /// is not empty; otherwise, returns _null_.
-  int get vfBytesLast {
-    final len = buf.length;
-    return (len == 0) ? null : getUint8(len - 1);
-  }
+  /// Returns the value of the Value Field for a long Element.
+  Uint8List getLongVF([int offset = 12, int length]) =>
+      getUint8List(offset, length ??= buf.length);
 }
 
-mixin EvrMixin {
+mixin BytesDicomSetMixin {
   Uint8List get buf;
-  int get vfOffset;
-  int get vfLengthOffset;
-  int getUint8(int offset);
-  void setUint8(int offset, int value);
-  int getUint32(int offset);
-  void setUint16(int offset, int value);
-  bool checkVFLengthField(int vlf, int vfLength);
-  Bytes asBytes([int offset, int length]);
-
-  // **** End of interface
-
-  bool get isEvr => true;
-  int get vrOffset => 4;
-
-  // TODO replace with 16 bit version??
-  int get vrCode => (getUint8(vrOffset) << 8) + getUint8(vrOffset + 1);
-
-  /// Returns the internal VR index of _this_.
-  int get vrIndex => vrIndexFromCode(vrCode);
-
-  ///  Returns the identifier of the VR of _this_.
-  String get vrId => vrIdFromIndex(vrIndex);
-}
-
-/// Explicit Little Endian Element with short (16-bit) Value Field Length.
-mixin EvrShortBytes implements ElementInterface {
-  void setUint8(int offset, int value);
-  void setUint16(int offset, int value);
-
-  /// The byte offset from the beginning of the Element
-  /// to the Value Length Field.
-  @override
-  int get vfLengthOffset => 6;
-
-  /// The offset to the Value Field
-  @override
-  int get vfOffset => kVFOffset;
-
-  /// Write a short EVR header.
-  void setHeader(int code, int vrCode, int vlf) {
-    setUint16(0, code >> 16);
-    setUint16(2, code & 0xFFFF);
-    setUint8(4, vrCode >> 8);
-    setUint8(5, vrCode & 0xFF);
-    setUint16(6, vlf);
-  }
-
-  /// The Value Field offset.
-  static const int kVFOffset = 8;
-}
-
-/// Explicit Little Endian [Bytes] with long (32-bit) Value Field Length.
-mixin EvrLongBytes implements ElementInterface {
   void setUint8(int offset, int value);
   void setUint16(int offset, int value);
   void setUint32(int offset, int value);
 
-  /// The byte offset from the beginning of the Element
-  /// to the Value Length Field.
-  @override
-  int get vfLengthOffset => 8;
+  // **** set methods
 
-  /// The offset to the Value Field
-  @override
-  int get vfOffset => kVFOffset;
+  /// The DICOM Tag Code of _this_.
+  set code(int code) => setCode(0, code);
 
-  // TODO: make private
-  /// Write a short EVR header.
-  void setHeader(int code, int vrCode, int vlf) {
-    setUint16(0, code >> 16);
-    setUint16(2, code & 0xFFFF);
-    setUint8(4, vrCode >> 8);
-    setUint8(5, vrCode & 0xFF);
-    // Note: The Uint16 field at offset 6 is already zero.
-    setUint32(8, vlf);
+  /// Sets the _code_ of _this_ to [code].
+  void setCode(int offset, int code) {
+    setUint16(offset, code >> 16);
+    setUint16(offset + 2, code & 0xFFFF);
   }
 
-  /// The offset to the Value Field.
-  static const int kVFOffset = 12;
-}
-
-/// Explicit Little Endian Element with short (16-bit) Value Field Length.
-mixin IvrBytes implements ElementInterface {
-  void setUint16(int offset, int value);
-  void setUint32(int offset, int value);
-
-  /// The byte offset from the beginning of the Element
-  /// to the Value Length Field.
-  @override
-  int get vfLengthOffset => 4;
-
-  /// The offset to the Value Field
-  @override
-  int get vfOffset => kVFOffset;
-
-  /// Write a short EVR header.
-  void setHeader(int code, int vrCode, int vlf) {
-    setUint16(0, code >> 16);
-    setUint16(2, code & 0xFFFF);
-    setUint32(6, vlf);
+  /// Sets the VR field of _this_ to [vrCode].
+  void setVRCode(int offset, int vrCode) {
+    setUint8(offset, vrCode >> 8);
+    setUint8(offset + 1, vrCode & 0xFF);
   }
 
-  /// The Value Field offset.
-  static const int kVFOffset = 8;
-}
+  /// Sets the Value Field Length field for a short Element to [vlf].
+  void setShortVLF(int offset, int vlf) => setUint16(offset, vlf);
 
-mixin ToStringMixin {
-  int get code;
-  int get vrCode;
-  int get vfLengthField;
-  int get vfLength;
+  /// Sets the Value Field Length field for a short Element to [vlf].
+  void setLongVLF(int offset, int vlf) => setUint32(offset, vlf);
 
-  @override
-  String toString() {
-    final vrIndex = vrIndexFromCode(vrCode);
-    final vrId = vrIdFromIndex(vrIndex);
-    final vlf = vfLengthField;
-    return '$runtimeType ${_dcm(code)} $vrId($vrIndex, ${_hex(vrCode, 4)}) '
-        'vlf($vlf, ${_hex(vlf, 8)}) vfl($vfLength) ${super.toString()}';
+  /// Sets the Value Field for a short Element to [vf].
+  void setShortVF(Uint8List vf) => _setValueField(vf, 8);
+
+  /// Sets the Value Field L for a long Element to [vf].
+  void setLongVF(Uint8List vf) => _setValueField(vf, 12);
+
+  /// Sets the Value Field Length field for an Element to [vf].
+  void _setValueField(Uint8List vf, int vfOffset) {
+    for (var i = 0, j = vfOffset; i < vf.length; i++, j++) buf[j] = vf[i];
   }
-
-  /// Returns a [String] in DICOM Tag Code format, e.g. (gggg,eeee),
-  /// corresponding to the Tag [code].
-  String _dcm(int code) {
-    assert(code >= 0 && code <= 0xFFFFFFFF, 'code: $code');
-    return '(${_hex(code >> 16, 4)},${_hex(code & 0xFFFF, 4)})';
-  }
-
-  String _hex(int n, int width) => '${n.toRadixString(16).padLeft(width, '0')}';
 }

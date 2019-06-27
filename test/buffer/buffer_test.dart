@@ -8,7 +8,7 @@
 //
 import 'dart:typed_data';
 
-import 'package:bytes/bytes.dart';
+//import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
@@ -21,77 +21,84 @@ void main() {
       final vList0 = ['1q221', 'sadaq223'];
       final s = vList0.join('\\');
       final bytes0 = BytesDicom.fromAscii(s);
+      print('bytes0 $bytes0');
       final dReadBuffer0 = DicomReadBuffer(bytes0);
       print('dReadBuffer0:$dReadBuffer0');
+      print('dReadBuffer0.bytes:${dReadBuffer0.bytes}');
 
-      expect(dReadBuffer0.bytes.buf.buffer == bytes0.buffer, true);
-      expect(dReadBuffer0.bytes == bytes0, true);
-      expect(dReadBuffer0.length == bytes0.length, true);
+      print('buffer0:${dReadBuffer0.bytes.buf.buffer.hashCode}');
+      print(' bytes0:${bytes0.buf.buffer.hashCode}');
+
+      expect(dReadBuffer0.bytes.buf.buffer == bytes0.buf.buffer, isTrue);
+      expect(dReadBuffer0.bytes == bytes0, isTrue);
+      expect(dReadBuffer0.length == bytes0.length, isTrue);
       expect(
           dReadBuffer0.bytes.buf.buffer.lengthInBytes ==
               bytes0.buffer.lengthInBytes,
           true);
-      expect(dReadBuffer0.rIndex == 0, true);
-      expect(dReadBuffer0.wIndex == bytes0.length, true);
+      expect(dReadBuffer0.rIndex == 0, isTrue);
+      expect(dReadBuffer0.wIndex == bytes0.length, isTrue);
 
       print('dReadBuffer0.readCode(): ${dReadBuffer0.readCode()}');
     });
 
     test('ReadBuffer', () {
       final vList0 = rng.uint8List(1, 10);
-      final bytes = BytesLEShortEvr.typedDataView(vList0);
+      final bytes = BytesDicomLE.typedDataView(vList0);
       final readBuffer0 = DicomReadBuffer(bytes);
       print('readBuffer0: $readBuffer0');
 
-      expect(readBuffer0.rIndex == bytes.offset, true);
-      expect(readBuffer0.wIndex == bytes.length, true);
+      expect(readBuffer0.rIndex == bytes.offset, isTrue);
+      expect(readBuffer0.wIndex == bytes.length, isTrue);
       expect(
           readBuffer0.bytes.buf.buffer.asUint8List().elementAt(0) == vList0[0],
           true);
-      expect(readBuffer0.offset == bytes.offset, true);
-      expect(readBuffer0.bytes == bytes, true);
+      expect(readBuffer0.offset == bytes.offset, isTrue);
+      expect(readBuffer0.bytes == bytes, isTrue);
 
-      final readBuffer1 = DicomReadBuffer(Bytes.fromList(vList0));
+      final readBuffer1 = DicomReadBuffer(BytesDicom.typedDataView(vList0));
       print('readBuffer1: $readBuffer1');
 
-      expect(readBuffer1.rIndex == bytes.offset, true);
-      expect(readBuffer1.wIndex == bytes.length, true);
+      expect(readBuffer1.rIndex == bytes.offset, isTrue);
+      expect(readBuffer1.wIndex == bytes.length, isTrue);
       expect(
           readBuffer1.bytes.buf.buffer.asUint8List().elementAt(0) == vList0[0],
           true);
-      expect(readBuffer1.offset == bytes.offset, true);
-      expect(readBuffer1.bytes == bytes, true);
+      expect(readBuffer1.offset == bytes.offset, isTrue);
+      expect(readBuffer1.bytes == bytes, isTrue);
     });
 
     test('DicomReadBuffer.from', () {
       final vList0 = rng.uint8List(1, 10);
-      final bytes = BytesLEShortEvr.typedDataView(vList0);
+      final bytes = BytesDicom.typedDataView(vList0);
+      print('bytes: $bytes');
       final readBuffer0 = DicomReadBuffer(bytes);
-      print('DicomReadBuffer0: $readBuffer0');
+      print('readBuffer0.bytes: ${readBuffer0.bytes}');
+      print('raadBuffer0: $readBuffer0');
 
-      expect(readBuffer0.rIndex == bytes.offset, true);
-      expect(readBuffer0.wIndex == bytes.length, true);
+      expect(readBuffer0.rIndex == bytes.offset, isTrue);
+      expect(readBuffer0.wIndex == bytes.length, isTrue);
       expect(
           readBuffer0.bytes.buf.buffer.asUint8List().elementAt(0) == vList0[0],
-          true);
-      expect(readBuffer0.offset == bytes.offset, true);
-      expect(readBuffer0.bytes == bytes, true);
+          isTrue);
+      expect(readBuffer0.offset == bytes.offset, isTrue);
+      expect(readBuffer0.bytes == bytes, isTrue);
 
       final from0 = DicomReadBuffer(readBuffer0.bytes);
       print('ReadBuffer.from: $from0');
 
-      expect(from0.rIndex == bytes.offset, true);
-      expect(from0.wIndex == bytes.length, true);
-      expect(
-          from0.bytes.buf.buffer.asUint8List().elementAt(0) == vList0[0], true);
-      expect(from0.offset == bytes.offset, true);
-      expect(from0.bytes == bytes, true);
+      expect(from0.rIndex == bytes.offset, isTrue);
+      expect(from0.wIndex == bytes.length, isTrue);
+      expect(from0.bytes.buf.buffer.asUint8List().elementAt(0) == vList0[0],
+          isTrue);
+      expect(from0.offset == bytes.offset, isTrue);
+      expect(from0.bytes == bytes, isTrue);
     });
 
     test('ReadBuffer readUint8List', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint8List(0, i);
-        final bytes = BytesLEShortEvr.typedDataView(vList0);
+        final bytes = BytesDicomLE.typedDataView(vList0);
         final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
@@ -104,7 +111,7 @@ void main() {
     test('ReadBuffer readUint16List', () {
       for (var i = 1; i < 10; i++) {
         final vList0 = rng.uint16List(0, i);
-        final bytes = BytesLEShortEvr.typedDataView(vList0);
+        final bytes = BytesDicomLE.typedDataView(vList0);
         final readBuffer0 = DicomReadBuffer(bytes);
         print('readBuffer0: $readBuffer0');
 
@@ -129,14 +136,14 @@ void main() {
       final rBuf = getReadBuffer(vList0);
       final s = rBuf.readUtf8(vList0.length);
       print('readUtf8: "$s"');
-      expect(s.isEmpty, true);
+      expect(s.isEmpty, isTrue);
 
       for (var i = 2; i < 10; i += 2) {
         final vList1 = rng.utf8Bytes(2, i);
         final rBuf = getReadBuffer(vList1);
         final s = rBuf.readUtf8(vList1.length);
         print('readUtf8: "$s"');
-        expect(s.isNotEmpty, true);
+        expect(s.isNotEmpty, isTrue);
       }
     });
 
@@ -145,14 +152,14 @@ void main() {
       final rBuf = getReadBuffer(vList0);
       final s = rBuf.readAscii(vList0.length);
       print('readAscii: "$s"');
-      expect(s.isEmpty, true);
+      expect(s.isEmpty, isTrue);
 
       for (var i = 2; i < 10; i += 2) {
         final vList1 = rng.asciiBytes(2, i);
         final rBuf = getReadBuffer(vList1);
         final s = rBuf.readAscii(vList1.length);
         print('readAscii: "$s"');
-        expect(s.isNotEmpty, true);
+        expect(s.isNotEmpty, isTrue);
       }
     });
 
@@ -161,14 +168,14 @@ void main() {
       final rBuf = getReadBuffer(vList0);
       final s = rBuf.readLatin(vList0.length);
       print('readLatin: "$s"');
-      expect(s.isEmpty, true);
+      expect(s.isEmpty, isTrue);
 
       for (var i = 2; i < 10; i += 2) {
         final vList1 = rng.latinBytes(2, i);
         final rBuf = getReadBuffer(vList1);
         final s = rBuf.readLatin(vList1.length);
         print('readLatin: "$s"');
-        expect(s.isNotEmpty, true);
+        expect(s.isNotEmpty, isTrue);
       }
     });
   });
@@ -176,7 +183,7 @@ void main() {
 
 DicomReadBuffer getReadBuffer(TypedData td) {
   print('vList1 $td');
-  final bytes = BytesLEShortEvr.typedDataView(td);
+  final bytes = BytesDicomLE.typedDataView(td);
 //  print('bytes: $bytes');
   final rBuf = DicomReadBuffer(bytes);
 //  print('rBuf: $rBuf');

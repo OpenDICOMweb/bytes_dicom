@@ -1,4 +1,4 @@
-//  Copyright (c) 208, 2017, 2018,
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -6,56 +6,28 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-import 'dart:typed_data';
-
-import 'package:bytes_dicom/debug/test_utils.dart';
+import 'package:bytes/bytes.dart';
+import 'package:bytes/bytes_buffer.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
   final rng = RNG();
-  const repetitions = 100;
-  const min = 0;
-  final max = rng.nextUint8;
 
-  group('Bytes Int16 Tests', () {
+  test('ReadBuffer', () {
+    for (var i = 1; i < 10; i++) {
+      final vList1 = rng.int16List(1, i);
+      final bytes1 = Bytes.fromList(vList1);
+      final buf = ReadBuffer(bytes1);
 
-    test('DicomReadBuffer BytesDicomLE Int16 tests', () {
-      for (var i = 0; i < repetitions; i++) {
-        final vList0 = rng.int16List(min, max);
-        final rBuf0 = getReadBufferLE(vList0);
-        final out = Int16List(vList0.length);
-
-        for (var j = 0; j < vList0.length; j++) {
-          final v = rBuf0.readInt16();
-          expect(v, equals(vList0[j]));
-          out[j] = v;
-        }
-        expect(out, equals(vList0));
-
-        final rBuf1 = getReadBufferLE(vList0);
-        final vList1 = rBuf1.readInt16List(vList0.length);
-        expect(vList1, equals(vList0));
-      }
-    });
-
-    test('DicomReadBuffer BytesDicomBE Int16 tests', () {
-      for (var i = 0; i < repetitions; i++) {
-        final vList0 = rng.int16List(min, max);
-        final rBuf0 = getReadBufferBE(vList0);
-
-        final out = Int16List(vList0.length);
-        for (var j = 0; j < vList0.length; j++) {
-          final v = rBuf0.readInt16();
-          expect(v, equals(vList0[j]));
-          out[j] = v;
-        }
-        expect(out, equals(vList0));
-
-        final rBuf1 = getReadBufferBE(vList0);
-        final vList1 = rBuf1.readInt16List(vList0.length);
-        expect(vList1, equals(vList0));
-      }
-    });
+      expect(buf.bytes.buf.buffer == bytes1.buf.buffer, isTrue);
+      expect(buf.bytes == bytes1, isTrue);
+      expect(buf.length == bytes1.length, isTrue);
+      expect(
+          buf.bytes.buf.buffer.lengthInBytes == bytes1.buf.buffer.lengthInBytes,
+          true);
+      expect(buf.rIndex == 0, isTrue);
+      expect(buf.wIndex == bytes1.length, isTrue);
+    }
   });
 }

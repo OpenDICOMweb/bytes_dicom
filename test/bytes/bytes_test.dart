@@ -8,24 +8,25 @@
 //
 import 'dart:typed_data';
 
-import 'package:bytes_dicom/bytes_dicom.dart';
-import 'package:bytes_dicom/src/bytes/bytes_dicom.dart';
+import 'package:bytes/bytes.dart';
+import 'package:bytes/src/constants.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 
 void main() {
   final rng = RNG();
+
   group('Bytes Tests', () {
     test('Test getters and initial zeros', () {
       const count = 12;
 
       // Check initialized with zeros
       for (var i = 0; i < count; i++) {
-        final bytes = BytesDicomLE.empty(count);
+        final bytes =Bytes.empty(count);
         expect(bytes.endian == Endian.little, true);
 
         expect(bytes.elementSizeInBytes == 1, true);
-        print('offset: ${bytes.offset}');
+        // log.debug('offset: ${bytes.offset}');
         expect(bytes.offset == 0, true);
         expect(bytes.buffer == bytes.bd.buffer, true);
         expect(bytes.length == count, true);
@@ -79,7 +80,7 @@ void main() {
           expect(bytes.getFloat64(i) == 0, true);
         }
 
-        final bytes0 = BytesDicomLE.from(bytes);
+        final bytes0 = Bytes.from(bytes);
         expect(bytes0.endian == Endian.little, true);
 
         expect(bytes0.elementSizeInBytes == 1, true);
@@ -92,9 +93,9 @@ void main() {
     });
 
     test('Test List interface: initial zeroed, equality, hashCode', () {
-      const count = 254;
-      final a = BytesDicomLE.empty(count);
-      final b = BytesDicomLE.empty(count);
+      const count = 255;
+      final a =Bytes.empty(count);
+      final b =Bytes.empty(count);
 
       // Check initialized with zeros
       for (var i = 0; i < count; i++) {
@@ -133,26 +134,25 @@ void main() {
       const loopCount = 100;
 
       for (var i = 0; i < loopCount; i++) {
-        final a = BytesDicomLE.empty(0xFFFF * kInt16Size);
+        final a =Bytes.empty(0xFFFF * kInt16Size);
         assert(a.length == 0xFFFF * kInt16Size, true);
 
         for (var i = 0, j = -10; i <= 10; i++, j += 2) {
           a.setInt16(i * 2, j);
-          print('i: $i, j: $j, v: ${a.getInt16(i)}');
+          // log.debug('i: $i, j: $j, v: ${a.getInt16(i)}');
           expect(a.getInt16(i * 2) == j, true);
         }
         for (var i = 0, j = -10; i <= 10; i++, j += 2) {
-          print('i: $i, j: $j, v: ${a.getInt16(i)}');
+          // log.debug('i: $i, j: $j, v: ${a.getInt16(i)}');
           expect(a.getInt16(i * 2) == j, true);
         }
       }
     });
 
     test('bytes from', () {
-      final list0 = rng.uint8List(2, 2);
-      final bytes = BytesDicomLE.typedDataView(list0);
-      expect(bytes, equals(list0));
-      final byteF0 = BytesDicomLE.from(bytes);
+      final list0 = rng.uint8List(1, 1);
+      final bytes = Bytes.typedDataView(list0);
+      final byteF0 = Bytes.from(bytes);
       expect(byteF0, equals(bytes));
 
       expect(byteF0.endian == Endian.little, true);
@@ -163,9 +163,22 @@ void main() {
       expect(byteF0.hashCode is int, true);
     });
 
+    test('bytes fromList', () {
+      final list0 = rng.uint8List(1, 1);
+      final byteFL0 = Bytes.fromList(list0);
+      expect(byteFL0, equals(list0));
+
+      expect(byteFL0.endian == Endian.little, true);
+      expect(byteFL0.elementSizeInBytes == 1, true);
+      expect(byteFL0.offset == 0, true);
+      expect(byteFL0.buffer == byteFL0.bd.buffer, true);
+      expect(byteFL0.length == list0.length, true);
+      expect(byteFL0.hashCode is int, true);
+    });
+
     test('bytes fromTypedData', () {
       final list0 = rng.uint8List(1, 1);
-      final byteFTD0 = BytesDicomLE.typedDataView(list0);
+      final byteFTD0 = Bytes.typedDataView(list0);
       expect(byteFTD0, equals(list0));
 
       expect(byteFTD0.endian == Endian.little, true);
@@ -177,7 +190,7 @@ void main() {
 
       final floats = <double>[0, 1, 2, 3];
       final fl32List0 = Float32List.fromList(floats);
-      final fl32Bytes0 = BytesDicomLE.typedDataView(fl32List0);
+      final fl32Bytes0 = Bytes.typedDataView(fl32List0);
       expect(fl32Bytes0.getFloat32(0) == fl32List0[0], true);
       expect(fl32Bytes0.getFloat32(4) == fl32List0[1], true);
       expect(fl32Bytes0.getFloat32(8) == fl32List0[2], true);
@@ -188,8 +201,9 @@ void main() {
       for (var i = 0; i < fl32List0.length; i++)
         expect(fl32List0[i] == fl32List1[i], true);
 
+      // Urgent do this test for all 2,4, 8 and 26 byte aligned objects
       // Unaligned
-      final fl32b = BytesDicomLE.empty(20)
+      final fl32b =Bytes.empty(20)
         ..setFloat32(2, floats[0])
         ..setFloat32(6, floats[1])
         ..setFloat32(10, floats[2])
@@ -206,10 +220,10 @@ void main() {
     });
 
     test('bytes fromByteData', () {
-      final list0 = rng.uint8List(2, 2);
+      final list0 = rng.uint8List(1, 1);
       final bd = list0.buffer.asByteData();
-      final byteFD0 = BytesDicomLE.typedDataView(bd);
-      print('byteFD0: $byteFD0');
+      final byteFD0 = Bytes.typedDataView(bd);
+      // log.debug('byteFD0: $byteFD0');
 
       expect(byteFD0.endian == Endian.little, true);
       expect(byteFD0.elementSizeInBytes == 1, true);
@@ -217,95 +231,5 @@ void main() {
       expect(byteFD0.length == list0.length, true);
       expect(byteFD0.hashCode is int, true);
     });
-
-/*  Urgent implement here or move DSBytes and IDSBytes to convert package
-    test('DSBytes', () {
-      //final vList = rng.uint16List(1, 1);
-      final vList = ['1q221'];
-      final vList0 = ['1q221', 'sadaq223'];
-      //final bytes = BytesPadded.fromList(vList);
-      final bytes = BytesPadded.asciiFromList(vList);
-      final bytes0 = BytesPadded.asciiFromList(vList0);
-      final dsBytes0 = RDSBytes(bytes, 0);
-      final dsBytes1 = RDSBytes(bytes, 0);
-      final dsBytes2 = RDSBytes(bytes0, 0);
-      print('dsBytes0: $dsBytes0');
-
-      expect(dsBytes0.hashCode == dsBytes1.hashCode, true);
-      expect(dsBytes0.hashCode == dsBytes2.hashCode, false);
-
-      expect(dsBytes0 == dsBytes1, true);
-      expect(dsBytes0 == dsBytes2, false);
-
-      expect(dsBytes0.vfBytes, equals(bytes));
-      expect(dsBytes0.bytes, equals(bytes));
-
-      expect(dsBytes0.vfLength, equals(bytes.length - 132));
-      expect(dsBytes0.length, equals(bytes.length));
-
-      expect(dsBytes0.fmiEnd == 0, true);
-      expect(dsBytes0.fmiStart == 0, true);
-
-      expect(dsBytes0.dsStart, equals(bytes.offset));
-      expect(dsBytes0.dsEnd, equals(bytes.offset + bytes.length));
-
-      expect(dsBytes0.hasPrefix, true);
-      expect(dsBytes0.vfOffset == 132, true);
-      expect(dsBytes0.vfLengthField, equals(bytes.length - 132));
-
-      expect(dsBytes0.getUint8(vList0.length),
-          equals(bytes.getUint8(vList0.length)));
-
-      expect(dsBytes0.getUint16(vList0.length),
-          equals(bytes.getUint16(vList0.length)));
-
-      expect(dsBytes0.getUint32(vList.length),
-          equals(bytes.getUint32(vList.length)));
-    });
-
-    test('IDSBytes', () {
-      final vList = ['1q221'];
-      final vList0 = ['1q221', 'sadaq223'];
-      final bytes = BytesPadded.asciiFromList(vList);
-      final bytes0 = BytesPadded.asciiFromList(vList0);
-      final idsBytes0 = IDSBytes(bytes);
-      final idsBytes1 = IDSBytes(bytes);
-      final idsBytes2 = IDSBytes(bytes0);
-      print('idsBytes0: $idsBytes0');
-
-      expect(idsBytes0.hashCode == idsBytes1.hashCode, true);
-      expect(idsBytes0.hashCode == idsBytes2.hashCode, false);
-
-      expect(idsBytes0 == idsBytes1, true);
-      expect(idsBytes0 == idsBytes2, false);
-
-      expect(idsBytes0.bytes, equals(bytes));
-
-      expect(idsBytes0.vfLength, equals(bytes.length - 8));
-      expect(idsBytes0.length, equals(bytes.length));
-
-      expect(idsBytes0.dsStart, equals(bytes.offset));
-      expect(idsBytes0.dsEnd, equals(bytes.offset + bytes.length));
-
-      expect(idsBytes0.vfOffset == 8, true);
-
-      final list = <int>[];
-      for (var i = 0; i < vList[0].length; i++) {
-        final data = vList[0].codeUnitAt(i);
-        list.add(data);
-      }
-      expect(idsBytes0.vfAsUint8List, equals(list));
-
-      expect(idsBytes0.getUint8(vList0.length),
-          equals(bytes.getUint8(vList0.length)));
-
-      expect(idsBytes0.getUint16(vList0.length),
-          equals(bytes.getUint16(vList0.length)));
-
-      expect(idsBytes0.getUint32(vList.length),
-          equals(bytes.getUint32(vList.length)));
-    });
-*/
-
   });
 }

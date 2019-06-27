@@ -50,12 +50,6 @@ abstract class ElementInterface {
 
   /// Returns the Value Field of _this_ as [Bytes].
   Bytes get vfBytes;
-
-  /// Returns a copy of _this_ containing the bytes from [start] inclusive
-  /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
-  /// An error occurs if [start] is outside the range 0 .. [length],
-  /// or if [end] is outside the range [start] .. [length].
-  BytesDicom sublist([int start = 0, int end]);
 }
 
 mixin ElementMixin {

@@ -130,6 +130,7 @@ const List<int> kUndefinedLengthVRCodes = <int>[
 */
 
 String vrIdFromIndex(int vrIndex) => vrIdByIndex[vrIndex];
+
 int vrIndexFromId(String id) => vrIdByIndex.indexOf(id);
 
 const List<String> vrIdByIndex = <String>[

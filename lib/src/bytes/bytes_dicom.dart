@@ -10,20 +10,15 @@ import 'dart:convert' as cvt;
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
-import 'package:bytes_dicom/src/bytes/element_interface.dart';
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
-import 'package:bytes_dicom/src/dicom_constants.dart';
-import 'package:bytes_dicom/src/vr/vr_base.dart';
 
 const _kNull = 0;
 const _kSpace = 32;
 
-/// A class ensures that all [Bytes] are of an even length, by adding
-/// a padding character, which defaults to ' ', if necessary.
-///
-/// Note: This class handles all byte related methods that are special to
-/// DICOM.
-abstract class BytesDicom extends Bytes {
+/// A class that implements Byte related methods that are specific to DICOM.
+abstract class BytesDicom extends Bytes
+    with BytesDicomGetMixin, BytesDicomSetMixin {
   @override
   Uint8List buf;
 
@@ -33,7 +28,7 @@ abstract class BytesDicom extends Bytes {
   factory BytesDicom(Uint8List buf, [Endian endian = Endian.little]) =>
       (endian == Endian.little) ? BytesDicomLE(buf) : BytesDicomBE(buf);
 
-  BytesDicom._(this.buf) : assert(buf.length.isEven);
+  BytesDicom._(this.buf);
 
   /// Creates an empty [BytesDicomBE] of [length] and [endian].
   BytesDicom._empty(int length) : buf = Uint8List(length);
@@ -66,6 +61,15 @@ abstract class BytesDicom extends Bytes {
         : BytesDicomBE.from(bytes, offset, length);
   }
 
+  /// Creates a new [BytesDicom] from a [TypedData] containing the specified
+  /// region (from offset of length) and [endian]ness.
+  /// [endian] defaults to [Endian.little].
+  factory BytesDicom.typedDataView(TypedData td,
+          [int offset = 0, int length, Endian endian = Endian.little]) =>
+      (endian == Endian.little)
+          ? BytesDicomLE.typedDataView(td, offset, length)
+          : BytesDicomBE.typedDataView(td, offset, length);
+
   @override
   bool operator ==(Object other) =>
       (other is Bytes && noPadding && _bytesEqual(this, other)) ||
@@ -75,41 +79,8 @@ abstract class BytesDicom extends Bytes {
   // ignore: unnecessary_overrides
   int get hashCode => super.hashCode;
 
-  /// The DICOM Tag Code of _this_.
-  int get code => getCode(0);
-
-  /// The Element Group Field
-  int get group => getUint16(0);
-
-  /// The Element _element_ Field.
-  int get elt => getUint16(2);
-
-  /// Returns the last Uint8 element in Value Field, if Value Field
-  /// is not empty; otherwise, returns _null_.
-  int get vfBytesLast => (length == 0) ? null : getUint8(length - 1);
-
-  // **** get methods
-  /// Gets the DICOM Tag Code at [offset].
-  int getCode([int offset = 0]) =>
-      getUint16(offset) << 16 + getUint16(offset + 2);
-
-  /// Returns the value in the VR field of _this_.
-  int getVRCode([int offset = 0]) =>
-      getUint8(offset + 4) << 8 + getUint8(offset + 5);
-
-  /// Returns the value of the Value Field Length for a short Element.
-  int getShortVLF([int offset = 6]) => getUint16(offset);
-
-  /// Returns the value of the Value Field Length for a long Element.
-  int getLongVLF([int offset = 8]) => getUint32(offset);
-
-  /// Returns the value of the Value Field for a short Element.
-  Uint8List getShortVF([int offset = 8, int length]) =>
-      getUint8List(offset, length ?? buf.length);
-
-  /// Returns the value of the Value Field for a long Element.
-  Uint8List getLongVF([int offset = 12, int length]) =>
-      getUint8List(offset, length ??= buf.length);
+  // **** String get methods
+  // Urgent: this may not be needed once DicomReadBuffer removes padding
 
   /// Returns a [String] containing an _ASCII_ decoding of the specified
   /// region of _this_.
@@ -169,47 +140,18 @@ abstract class BytesDicom extends Bytes {
           String separator = '\\']) =>
       getStringList(offset, _getLength(offset, length), decoder, '\\');
 
+  /// Removes any padding chars from _this_ and returns the length of _this_.
   int _getLength([int offset = 0, int length]) {
     length ??= buf.length;
-    assert(length.isEven && length > 0);
-    assert(offset + length < buf.length);
+    assert(length >= 0 && offset + length <= buf.length);
+    if (length == 0 || length.isOdd) return length;
     final lastIndex = offset + length - 1;
     final c = buf[lastIndex];
     return (c == _kSpace || c == _kNull) ? length - 1 : length;
   }
 
-  // **** set methods
-
-  /// Sets the _code_ of _this_ to [code].
-  void setCode(int offset, int code) {
-    setUint16(offset, code >> 16);
-    setUint16(offset + 2, code & 0xFFFF);
-  }
-
-  /// Sets the VR field of _this_ to [vrCode].
-  void setVRCode(int offset, int vrCode) {
-    setUint8(offset, vrCode >> 8);
-    setUint8(offset + 1, vrCode & 0xFF);
-  }
-
-  /// Sets the Value Field Length field for a short Element to [vlf].
-  void setShortVLF(int offset, int vlf) => setUint16(offset, vlf);
-
-  /// Sets the Value Field Length field for a short Element to [vlf].
-  void setLongVLF(int offset, int vlf) => setUint32(offset, vlf);
-
-  /// Sets the Value Field for a short Element to [vf].
-  void setShortVF(Uint8List vf) => _setValueField(vf, 8);
-
-  /// Sets the Value Field L for a long Element to [vf].
-  void setLongVF(Uint8List vf) => _setValueField(vf, 12);
-
-  /// Sets the Value Field Length field for an Element to [vf].
-  void _setValueField(Uint8List vf, int vfOffset) {
-    for (var i = 0, j = vfOffset; i < vf.length; i++, j++) buf[j] = vf[i];
-  }
-
   // **** String set methods
+  // Urgent: these may not be needed once DicomWriteBuffer adds padding.
 
   // TODO: unit test
   /// Ascii encodes the specified range of [s] and then writes the
@@ -326,6 +268,7 @@ abstract class BytesDicom extends Bytes {
   void setString(int start, String s, [Encoder encoder]) =>
       _setStringBytes(start, encoder(s));
 
+  // Urgent is this useful is it faster
   /// Writes the Ascii encoding of [vList] into the Value Field of _this_.
   int writeAsciiVFFast(int offset, List<String> vList, [int padChar]) {
     const _kBackslash = 92;
@@ -344,24 +287,12 @@ abstract class BytesDicom extends Bytes {
     return index;
   }
 
-  /// Checks the Value Field length.
-  bool checkVFLengthField(int vfLengthField, int vfLength) {
-    if (vfLengthField != vfLength && vfLengthField != kUndefinedLength) {
-      if (vfLengthField == vfLength + 1) {
-        print('** vfLengthField: Odd length field: $vfLength');
-        return true;
-      }
-      return false;
-    }
-    return true;
-  }
-
-  @override
-  String toString() => '$runtimeType: offset: $offset length: $length';
+//  @override
+//  String toString() => '$runtimeType: offset: $offset length: $length $buf';
 
   /// If _true_ then a padding character is added, when an odd length [String]
   /// is read or when an odd length [String] is written.
-  static bool noPadding = false;
+  static bool noPadding = true;
 
   /// A [BytesDicom] with length 0.
   static BytesDicom kEmpty = Bytes.kEmptyBytes;
@@ -440,143 +371,10 @@ class BytesDicomLE extends BytesDicom
   /// Creates a new [Bytes] from a [TypedData] containing the specified
   /// region and [endian]ness.  [endian] defaults to [Endian.little].
   BytesDicomLE.typedDataView(TypedData td, [int offset = 0, int length])
-      : super._(td.buffer.asUint8List(
-            td.offsetInBytes + offset, length ?? td.lengthInBytes));
+      : super._typedDataView(td, offset, length ?? td.lengthInBytes);
 
   /// Returns _true_.
   bool get isEvr => true;
-}
-
-mixin BytesElement {
-  bool get isEvr;
-  int get code;
-  int get vrCode;
-  int get vrIndex;
-  int get vfLengthOffset;
-  int get vfLengthField;
-  int get vfLength;
-  int get vfOffset;
-  Bytes get vfBytes;
-  int get length;
-}
-
-/// Explicit Little Endian Element with short (16-bit) Value Field Length.
-class BytesLEShortEvr extends BytesDicom
-    with
-        LittleEndianGetMixin,
-        LittleEndianSetMixin,
-        EvrShortBytes,
-        BytesDicomMixin,
-        EvrMixin,
-        ToStringMixin
-    implements ElementInterface {
-  /// Returns an [BytesLEShortEvr] containing [buf].
-  BytesLEShortEvr(Uint8List buf) : super._(buf);
-
-  /// Returns an empty [BytesLEShortEvr] with length [length].
-  BytesLEShortEvr.empty(int length) : super._empty(length);
-
-  /// Returns an [BytesLEShortEvr] created from [bytes].
-  BytesLEShortEvr.from(Bytes bytes, [int offset = 0, int length])
-      : super._from(bytes, offset, length);
-
-  /// Creates a new [BytesLEShortEvr] from a [TypedData] containing
-  /// the specified region.
-  BytesLEShortEvr.typedDataView(TypedData td, [int offset = 0, int length])
-      : super._typedDataView(td, offset, length);
-
-  /// Returns an [BytesLEShortEvr] created from a view of [bytes].
-  factory BytesLEShortEvr.view(Bytes bytes, [int offset = 0, int length]) =>
-      BytesLEShortEvr.typedDataView(bytes.asUint8List(offset, length));
-
-  /// Returns an [BytesLEShortEvr] with an empty Value Field.
-  factory BytesLEShortEvr.header(int code, int vrCode, int vfLength) {
-    assert(vfLength.isEven);
-    final e = BytesLEShortEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
-    return e;
-  }
-
-  /// Returns an [BytesLEShortEvr] created from a view
-  /// of a Value Field ([vfBytes]).
-  factory BytesLEShortEvr.element(int code, int vrCode, Bytes vfBytes) {
-    final vfLength = vfBytes.length;
-    assert(vfLength.isEven);
-    final e = BytesLEShortEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
-      ..setUint8List(kVFOffset, vfBytes.buf);
-    return e;
-  }
-
-  /// Returns a copy of _this_ containing the bytes from [start] inclusive
-  /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
-  /// An error occurs if [start] is outside the range 0 .. [length],
-  /// or if [end] is outside the range [start] .. [length].
-  @override
-  BytesLEShortEvr sublist([int start = 0, int end]) =>
-      BytesLEShortEvr.from(this, start, (end ?? length) - start);
-
-  /// The Value Field offset.
-  static const int kVFOffset = 8;
-}
-
-/// Explicit Little Endian [Bytes] with long (32-bit) Value Field Length.
-class BytesLELongEvr extends BytesDicom
-    with
-        LittleEndianGetMixin,
-        LittleEndianSetMixin,
-        EvrLongBytes,
-        BytesDicomMixin,
-        EvrMixin,
-        ToStringMixin
-    implements ElementInterface {
-  /// Returns an [BytesLEShortEvr] containing [buf].
-  BytesLELongEvr(Uint8List buf) : super._(buf);
-
-  /// Returns an empty [BytesLEShortEvr] with length [length].
-  BytesLELongEvr.empty(int length) : super._empty(length);
-
-  /// Returns an [BytesLEShortEvr] created from [bytes].
-  BytesLELongEvr.from(Bytes bytes, [int offset = 0, int length])
-      : super._from(bytes, offset, length);
-
-  /// Creates a new [BytesLELongEvr] from a [TypedData] containing
-  /// the specified region.
-  BytesLELongEvr.typedDataView(TypedData td, [int offset = 0, int length])
-      : super._typedDataView(td, offset, length);
-
-  /// Returns an [BytesLEShortEvr] created from a view of [bytes].
-  factory BytesLELongEvr.view(Bytes bytes, [int offset = 0, int length]) =>
-      BytesLELongEvr.typedDataView(bytes.asUint8List(offset, length));
-
-  /// Returns a [BytesLELongEvr] with a header, but with an empty Value Field.
-  factory BytesLELongEvr.header(int code, int vrCode, int vfLength) {
-    assert(vfLength.isEven);
-    final e = BytesLELongEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
-    return e;
-  }
-
-  /// Creates a [BytesLELongEvr].
-  factory BytesLELongEvr.element(int code, int vrCode, Bytes vfBytes) {
-    final vfLength = vfBytes.length;
-    assert(vfLength.isEven);
-    final e = BytesLELongEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
-      ..setUint8List(kVFOffset, vfBytes.buf);
-    return e;
-  }
-
-  /// Returns a copy of _this_ containing the bytes from [start] inclusive
-  /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
-  /// An error occurs if [start] is outside the range 0 .. [length],
-  /// or if [end] is outside the range [start] .. [length].
-  @override
-  BytesLELongEvr sublist([int start = 0, int end]) =>
-      BytesLELongEvr.from(this, start, (end ?? length) - start);
-
-  /// The offset to the Value Field.
-  static const int kVFOffset = 12;
 }
 
 /// A class ensures that all [Bytes] are of an even length, by adding
@@ -602,216 +400,6 @@ class BytesDicomBE extends BytesDicom
   bool get isEvr => false;
 }
 
-/// Explicit Little Endian Element with short (16-bit) Value Field Length.
-class BytesBEShortEvr extends BytesDicom
-    with
-        BigEndianGetMixin,
-        BigEndianSetMixin,
-        EvrShortBytes,
-        BytesDicomMixin,
-        EvrMixin,
-        ToStringMixin
-    implements ElementInterface {
-  /// Returns an [BytesLEShortEvr] containing [buf].
-  BytesBEShortEvr(Uint8List buf) : super._(buf);
-
-  /// Returns an empty [BytesBEShortEvr] with length [length].
-  BytesBEShortEvr.empty(int length) : super._empty(length);
-
-  /// Returns an [BytesBEShortEvr] created from [bytes].
-  BytesBEShortEvr.from(Bytes bytes, [int offset = 0, int length])
-      : super._from(bytes, offset, length);
-
-  /// Creates a new [BytesBEShortEvr] from a [TypedData] containing
-  /// the specified region.
-  BytesBEShortEvr.typedDataView(TypedData td, [int offset = 0, int length])
-      : super._typedDataView(td, offset, length);
-
-  /// Returns an [BytesBEShortEvr] created from a view of [bytes].
-  factory BytesBEShortEvr.view(Bytes bytes, [int offset = 0, int length]) =>
-      BytesBEShortEvr.typedDataView(bytes.asUint8List(offset, length));
-
-  /// Returns an [BytesBEShortEvr] with an empty Value Field.
-  factory BytesBEShortEvr.header(int code, int vrCode, int vfLength) {
-    assert(vfLength.isEven);
-    final e = BytesBEShortEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
-    return e;
-  }
-
-  /// Returns an [BytesBEShortEvr] created from a view
-  /// of a Value Field ([vfBytes]).
-  factory BytesBEShortEvr.element(int code, int vrCode, Bytes vfBytes) {
-    final vfLength = vfBytes.length;
-    assert(vfLength.isEven);
-    final e = BytesBEShortEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
-      ..setUint8List(kVFOffset, vfBytes.buf);
-    return e;
-  }
-
-  /// Returns a copy of _this_ containing the bytes from [start] inclusive
-  /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
-  /// An error occurs if [start] is outside the range 0 .. [length],
-  /// or if [end] is outside the range [start] .. [length].
-  @override
-  BytesBEShortEvr sublist([int start = 0, int end]) =>
-      BytesBEShortEvr.from(this, start, (end ?? length) - start);
-
-  /// The Value Field offset.
-  static const int kVFOffset = 8;
-}
-
-/// Explicit Little Endian [Bytes] with long (32-bit) Value Field Length.
-class BytesBELongEvr extends BytesDicom
-    with
-        BigEndianGetMixin,
-        BigEndianSetMixin,
-        EvrLongBytes,
-        BytesDicomMixin,
-        EvrMixin,
-        ToStringMixin
-    implements ElementInterface {
-  /// Returns an [BytesLEShortEvr] containing [buf].
-  BytesBELongEvr(Uint8List buf) : super._(buf);
-
-  /// Returns an empty [BytesBEShortEvr] with length [length].
-  BytesBELongEvr.empty(int length) : super._empty(length);
-
-  /// Returns an [BytesBEShortEvr] created from [bytes].
-  BytesBELongEvr.from(Bytes bytes, [int offset = 0, int length])
-      : super._from(bytes, offset, length);
-
-  /// Creates a new [BytesBELongEvr] from a [TypedData] containing
-  /// the specified region.
-  BytesBELongEvr.typedDataView(TypedData td, [int offset = 0, int length])
-      : super._typedDataView(td, offset, length);
-
-  /// Returns an [BytesBEShortEvr] created from a view of [bytes].
-  factory BytesBELongEvr.view(Bytes bytes, [int offset = 0, int length]) =>
-      BytesBELongEvr.typedDataView(bytes.asUint8List(offset, length));
-
-  /// Returns an [BytesBELongEvr] with an empty Value Field.
-  factory BytesBELongEvr.header(int code, int vrCode, int vfLength) {
-    assert(vfLength.isEven);
-    final e = BytesBELongEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
-    return e;
-  }
-
-  /// Creates an [BytesBELongEvr].
-  factory BytesBELongEvr.element(int code, int vrCode, Bytes vfBytes) {
-    final vfLength = vfBytes.length;
-    assert(vfLength.isEven);
-    final e = BytesBELongEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
-      ..setUint8List(kVFOffset, vfBytes.buf);
-    return e;
-  }
-
-  /// Returns a copy of _this_ containing the bytes from [start] inclusive
-  /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
-  /// An error occurs if [start] is outside the range 0 .. [length],
-  /// or if [end] is outside the range [start] .. [length].
-  @override
-  BytesBELongEvr sublist([int start = 0, int end]) =>
-      BytesBELongEvr.from(this, start, (end ?? length) - start);
-
-  /// The offset to the Value Field.
-  static const int kVFOffset = 12;
-}
-
-/// Implicit Little Endian [Bytes] with short (16-bit) Value Field Length.
-class BytesIvr extends BytesDicom
-    with
-        LittleEndianGetMixin,
-        LittleEndianSetMixin,
-        BytesDicomMixin,
-        ToStringMixin
-    implements ElementInterface {
-  /// Returns an [BytesIvr] containing [buf].
-  BytesIvr(Uint8List buf) : super._(buf);
-
-  /// Creates an empty [BytesIvr] of [length].
-  BytesIvr.empty(int length) : super._empty(length);
-
-  /// Create an [BytesIvr] Element from [Bytes].
-  BytesIvr.from(Bytes bytes, int start, int length)
-      : super._from(bytes, start, length);
-
-  /// Create an [BytesIvr] Element from a view of [Bytes].
-  BytesIvr.typedDataView(TypedData td, [int start = 0, int length])
-      : super._typedDataView(td, start, length);
-
-  /// Returns an [BytesBEShortEvr] created from a view of [bytes].
-  factory BytesIvr.view(Bytes bytes, [int offset = 0, int length]) =>
-      BytesIvr.typedDataView(bytes.asUint8List(offset, length));
-
-  /// Returns an [BytesIvr] with an empty Value Field.
-  factory BytesIvr.header(int code, int vrCode, int vfLength) {
-    assert(vfLength.isEven);
-    return BytesIvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
-  }
-
-  /// Creates an [BytesIvr].
-  factory BytesIvr.element(int code, int vrCode, Bytes vfBytes) {
-    final vfLength = vfBytes.length;
-    assert(vfLength.isEven);
-    return BytesIvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
-      ..setUint8List(kVFOffset, vfBytes.buf);
-  }
-
-  /// Returns _false_.
-  @override
-  bool get isEvr => false;
-  @override
-  int get vrOffset => throw UnsupportedError('VR not supported');
-  @override
-  int get vrCode => kUNCode;
-  @override
-  int get vrIndex => kUNIndex;
-  @override
-  String get vrId => 'UN';
-  @override
-  int get vfOffset => kVFOffset;
-
-  /// The byte offset from the beginning of the Element
-  /// to the Value Length Field.
-  @override
-  int get vfLengthOffset => 4;
-
-  @override
-  int get vfLengthField {
-    final vlf = getUint32(vfLengthOffset);
-    assert(checkVFLengthField(vlf, vfLength));
-    return vlf;
-  }
-
-  @override
-  int get vfLength => buf.length - 8;
-
-  // TODO: make private?
-  /// Write a short EVR header.
-  void setHeader(int offset, int code, int vlf) {
-    setUint16(offset, code >> 16);
-    setUint16(2, code & 0xFFFF);
-    setUint32(4, vlf);
-  }
-
-  /// Returns a copy of _this_ containing the bytes from [start] inclusive
-  /// to [end] exclusive. If [end] is omitted, the [length] of _this_ is used.
-  /// An error occurs if [start] is outside the range 0 .. [length],
-  /// or if [end] is outside the range [start] .. [length].
-  @override
-  BytesIvr sublist([int start = 0, int end]) =>
-      BytesIvr.from(this, start, (end ?? length) - start);
-
-  /// The offset of the Value Field in an IVR Element
-  static const int kVFOffset = 8;
-}
-
 // Urgent: unit test
 /// Returns a [Bytes] containing the Base64 decoding of [s].
 BytesDicom _stringToBytes(
@@ -828,7 +416,7 @@ BytesDicom _stringToBytes(
       bList = nList;
     }
   }
-  return Bytes.typedDataView(bList);
+  return BytesDicomLE.typedDataView(bList, 0, bList.length);
 }
 
 /// Returns a [Bytes] containing a decoding of [list].

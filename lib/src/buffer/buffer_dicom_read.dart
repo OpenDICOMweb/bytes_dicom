@@ -18,20 +18,27 @@ const _kSpace = 32;
 
 /// A [BytesBuffer] for reading DicomBytes from [BytesDicomLE].
 /// EVR and IVR are taken care of by the underlying [BytesDicomLE].
-class DicomReadBuffer extends ReadBuffer {
+class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
+  @override
+  BytesDicom bytes;
+  @override
+  int rIndex;
+  @override
+  int get wIndex => bytes.length;
+  @override
+  set wIndex(int offset) => throw UnsupportedError('wIndex is not settable');
+
   /// Constructor
   DicomReadBuffer(BytesDicom bytes, [int offset = 0, int length])
-      : super(bytes.asBytes(offset, length));
+      : bytes =
+            BytesDicom.typedDataView(bytes.buf, offset, length, bytes.endian),
+        rIndex = 0;
 
-  @override
-  Endian get endian => bytes.endian;
+  // @override
+  // Endian get endian => bytes.endian;
 
   /// Returns the DICOM Tag Code for _this_.
-  int get code {
-    final group = bytes.getUint16(0);
-    final elt = bytes.getUint16(2);
-    return (group << 16) + elt;
-  }
+  int get code => bytes.getCode(rIndex);
 
   /// Returns the VR Code for _this_.
   int get vrCode => (bytes.getUint8(4) << 8) + bytes.getUint8(5);
@@ -175,12 +182,10 @@ class DicomReadBuffer extends ReadBuffer {
       readUtf8(length, noPadding: noPadding);
 
   int _getLength(int length) {
-    assert(rIndex.isEven && rHasRemaining(length), '@$rIndex : $readRemaining');
-    if (length <= 0) throw ArgumentError();
+ //   assert(rIndex.isEven && rHasRemaining(length), '@$rIndex : $readRemaining');
+    if (length < 0) throw ArgumentError('length must be non-negative');
+    if (length == 0) return 0;
     final c = bytes[rIndex + (length - 1)];
     return c == _kSpace || c == _kNull ? length - 1 : length;
   }
-
-
-
 }
