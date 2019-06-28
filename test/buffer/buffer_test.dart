@@ -139,7 +139,7 @@ void main() {
       expect(s.isEmpty, isTrue);
 
       for (var i = 2; i < 10; i += 2) {
-        final vList1 = rng.utf8Bytes(2, i);
+        final vList1 = rng.utf8Bytes(1, i);
         final rBuf = getReadBuffer(vList1);
         final s = rBuf.readUtf8(vList1.length);
         print('readUtf8: "$s"');
@@ -154,12 +154,13 @@ void main() {
       print('readAscii: "$s"');
       expect(s.isEmpty, isTrue);
 
-      for (var i = 2; i < 10; i += 2) {
-        final vList1 = rng.asciiBytes(2, i);
+      //Urgent: change all tests in this file to be 0 based
+      for (var i = 0; i < 10; i++) {
+        final vList1 = rng.asciiBytes(0, i);
         final rBuf = getReadBuffer(vList1);
         final s = rBuf.readAscii(vList1.length);
         print('readAscii: "$s"');
-        expect(s.isNotEmpty, isTrue);
+        expect(vList1.length, equals(s.length));
       }
     });
 

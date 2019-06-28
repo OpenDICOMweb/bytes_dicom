@@ -25,8 +25,6 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
   int rIndex;
   @override
   int get wIndex => bytes.length;
-  @override
-  set wIndex(int offset) => throw UnsupportedError('wIndex is not settable');
 
   /// Constructor
   DicomReadBuffer(BytesDicom bytes, [int offset = 0, int length])
@@ -34,21 +32,14 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
             BytesDicom.typedDataView(bytes.buf, offset, length, bytes.endian),
         rIndex = 0;
 
-  // @override
-  // Endian get endian => bytes.endian;
-
   /// Returns the DICOM Tag Code for _this_.
   int get code => bytes.getCode(rIndex);
 
   /// Returns the VR Code for _this_.
-  int get vrCode => (bytes.getUint8(4) << 8) + bytes.getUint8(5);
+  int get vrCode => bytes.getCode(rIndex);
 
   /// Returns the VR Index for _this_.
   int get vrIndex => vrIndexByCode8Bit[vrCode];
-
-  /// Returns the DICOM Tag Code at [offset].
-  int getCode([int offset = 0]) =>
-      (bytes.getUint16(offset) << 16) + bytes.getUint16(offset + 2);
 
   //Urgent move below this to DicomReadBuffer
   /// The underlying [ByteData]
@@ -109,7 +100,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
   /// the [rIndex] by four _bytes.
   int readCode() {
     assert(rIndex.isEven && rHasRemaining(8), '@$rIndex : $readRemaining');
-    final code = getCode(rIndex);
+    final code = bytes.getCode(rIndex);
     rIndex += 4;
     return code;
   }
@@ -117,7 +108,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
   /// Read the VR .
   int readVRCode() {
     assert(rIndex.isEven && rHasRemaining(4), '@$rIndex : $readRemaining');
-    final vrCode = (bytes.getUint8(rIndex) << 8) + bytes.getUint8(rIndex + 1);
+    final vrCode = bytes.getVRCode(rIndex);
     rIndex += 2;
     return vrCode;
   }
@@ -145,32 +136,29 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
   /// returns the result.
   bool getUint32AndCompare(int target) => target == bytes.getUint32(rIndex);
 
-  /// Read a String Value Field.
+  /// Read a String Value Field as ASCII.
   @override
   String readAscii(int length,
       {bool allowInvalid = true, bool noPadding = true}) {
-    final len = noPadding ? _getLength(length) : length;
-    final s = bytes.getAscii(rIndex, len);
+    final s = bytes.getAscii(rIndex, _getLength(length, noPadding));
     rIndex += length;
     return s;
   }
 
-  /// Read a String Value Field.
+  /// Read a String Value Field as Latin(n).
   @override
   String readLatin(int length,
       {bool allowInvalid = true, bool noPadding = true}) {
-    final len = noPadding ? _getLength(length) : length;
-    final s = bytes.getLatin(rIndex, len);
+    final s = bytes.getLatin(rIndex, _getLength(length, noPadding));
     rIndex += length;
     return s;
   }
 
-  /// Read a String Value Field.
+  /// Read a String Value Field as UTF-8.
   @override
   String readUtf8(int length,
       {bool allowInvalid = true, bool noPadding = true}) {
-    final len = noPadding ? _getLength(length) : length;
-    final s = bytes.getUtf8(rIndex, len);
+    final s = bytes.getUtf8(rIndex, _getLength(length, noPadding));
     rIndex += length;
     return s;
   }
@@ -181,10 +169,10 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
           {bool allowInvalid = false, bool noPadding = false}) =>
       readUtf8(length, noPadding: noPadding);
 
-  int _getLength(int length) {
- //   assert(rIndex.isEven && rHasRemaining(length), '@$rIndex : $readRemaining');
+  // Urgent: decide if DicomReadBuffer should handle padding!
+  int _getLength(int length, bool noPadding) {
     if (length < 0) throw ArgumentError('length must be non-negative');
-    if (length == 0) return 0;
+    if (length == 0 || noPadding == true) return length;
     final c = bytes[rIndex + (length - 1)];
     return c == _kSpace || c == _kNull ? length - 1 : length;
   }

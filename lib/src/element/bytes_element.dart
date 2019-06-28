@@ -9,10 +9,29 @@
 import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
+import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
 import 'package:bytes_dicom/src/element/element_interface.dart';
 import 'package:bytes_dicom/src/element/bytes_element_mixin.dart';
 import 'package:bytes_dicom/src/to_string_mixin.dart';
 import 'package:bytes_dicom/src/vr/vr_base.dart';
+
+/// The format of the [BytesElement].
+enum BytesElementType {
+  /// Little Endian Short Explicit VR
+  leShortEvr,
+
+  /// Little Endian Long Explicit VR
+  leLongEvr,
+
+  /// Big Endian Short Explicit VR
+  beShortEvr,
+
+  /// Big Endian Long Explicit VR
+  beLongEvr,
+
+  /// LE Endian Implicit VR
+  leIvr
+}
 
 /// A read-only implementation of DICOM Elements based on Bytes.
 ///
@@ -54,12 +73,31 @@ abstract class BytesElement extends Bytes
   int get vfLength;
 
   /// Returns the last byte of the Value Field of _this_.
-//  @override
-//  int get vfBytesLast;
+  @override
+  int get vfBytesLast;
 
   /// Returns the Value Field of _this_ as [Bytes].
   @override
   Bytes get vfBytes;
+
+  /// Creates a [BytesElement] of [type].
+  static BytesElement make(
+      int code, Bytes vfBytes, int vrCode, BytesElementType type) {
+    switch (type) {
+      case BytesElementType.leShortEvr:
+        return BytesLEShortEvr.element(code, vfBytes, vrCode);
+      case BytesElementType.leLongEvr:
+        return BytesLELongEvr.element(code, vfBytes, vrCode);
+      case BytesElementType.beShortEvr:
+        return BytesBEShortEvr.element(code, vfBytes, vrCode);
+      case BytesElementType.beLongEvr:
+        return BytesBELongEvr.element(code, vfBytes, vrCode);
+      case BytesElementType.leIvr:
+        return BytesIvr.element(code, vfBytes, vrCode);
+      default:
+        throw ArgumentError();
+    }
+  }
 }
 
 /// Explicit Little Endian Element with short (16-bit) Value Field Length.
@@ -67,6 +105,8 @@ class BytesLEShortEvr extends BytesElement
     with
         LittleEndianGetMixin,
         LittleEndianSetMixin,
+        BytesDicomGetMixin,
+        BytesDicomSetMixin,
         BytesElementMixin,
         EvrMixin,
         EvrShortBytes
@@ -94,7 +134,7 @@ class BytesLEShortEvr extends BytesElement
       BytesLEShortEvr.typedDataView(bytes.asUint8List(offset, length));
 
   /// Returns an [BytesLEShortEvr] with an empty Value Field.
-  factory BytesLEShortEvr.header(int code, int vrCode, int vfLength) {
+  factory BytesLEShortEvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     final e = BytesLEShortEvr.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
@@ -103,7 +143,7 @@ class BytesLEShortEvr extends BytesElement
 
   /// Returns an [BytesLEShortEvr] created from a view
   /// of a Value Field ([vfBytes]).
-  factory BytesLEShortEvr.element(int code, int vrCode, Bytes vfBytes) {
+  factory BytesLEShortEvr.element(int code, Bytes vfBytes, int vrCode) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     final e = BytesLEShortEvr.empty(kVFOffset + vfLength)
@@ -122,6 +162,8 @@ class BytesLELongEvr extends BytesElement
         LittleEndianGetMixin,
         LittleEndianSetMixin,
         BytesElementMixin,
+        BytesDicomGetMixin,
+        BytesDicomSetMixin,
         EvrMixin,
         EvrLongBytes
     implements ElementInterface {
@@ -148,7 +190,7 @@ class BytesLELongEvr extends BytesElement
       BytesLELongEvr.typedDataView(bytes.asUint8List(offset, length));
 
   /// Returns a [BytesLELongEvr] with a header, but with an empty Value Field.
-  factory BytesLELongEvr.header(int code, int vrCode, int vfLength) {
+  factory BytesLELongEvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     final e = BytesLELongEvr.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
@@ -156,7 +198,7 @@ class BytesLELongEvr extends BytesElement
   }
 
   /// Creates a [BytesLELongEvr].
-  factory BytesLELongEvr.element(int code, int vrCode, Bytes vfBytes) {
+  factory BytesLELongEvr.element(int code, Bytes vfBytes, int vrCode) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     final e = BytesLELongEvr.empty(kVFOffset + vfLength)
@@ -174,6 +216,8 @@ class BytesBEShortEvr extends BytesElement
     with
         BigEndianGetMixin,
         BigEndianSetMixin,
+        BytesDicomGetMixin,
+        BytesDicomSetMixin,
         BytesElementMixin,
         EvrMixin,
         EvrShortBytes
@@ -201,7 +245,7 @@ class BytesBEShortEvr extends BytesElement
       BytesBEShortEvr.typedDataView(bytes.asUint8List(offset, length));
 
   /// Returns an [BytesBEShortEvr] with an empty Value Field.
-  factory BytesBEShortEvr.header(int code, int vrCode, int vfLength) {
+  factory BytesBEShortEvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     final e = BytesBEShortEvr.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
@@ -210,7 +254,7 @@ class BytesBEShortEvr extends BytesElement
 
   /// Returns an [BytesBEShortEvr] created from a view
   /// of a Value Field ([vfBytes]).
-  factory BytesBEShortEvr.element(int code, int vrCode, Bytes vfBytes) {
+  factory BytesBEShortEvr.element(int code, Bytes vfBytes, int vrCode) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     final e = BytesBEShortEvr.empty(kVFOffset + vfLength)
@@ -228,6 +272,8 @@ class BytesBELongEvr extends BytesElement
     with
         BigEndianGetMixin,
         BigEndianSetMixin,
+        BytesDicomGetMixin,
+        BytesDicomSetMixin,
         BytesElementMixin,
         EvrMixin,
         EvrLongBytes
@@ -255,7 +301,7 @@ class BytesBELongEvr extends BytesElement
       BytesBELongEvr.typedDataView(bytes.asUint8List(offset, length));
 
   /// Returns an [BytesBELongEvr] with an empty Value Field.
-  factory BytesBELongEvr.header(int code, int vrCode, int vfLength) {
+  factory BytesBELongEvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     final e = BytesBELongEvr.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
@@ -263,7 +309,7 @@ class BytesBELongEvr extends BytesElement
   }
 
   /// Creates an [BytesBELongEvr].
-  factory BytesBELongEvr.element(int code, int vrCode, Bytes vfBytes) {
+  factory BytesBELongEvr.element(int code, Bytes vfBytes, int vrCode) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     final e = BytesBELongEvr.empty(kVFOffset + vfLength)
@@ -278,7 +324,12 @@ class BytesBELongEvr extends BytesElement
 
 /// Implicit Little Endian [Bytes] with short (16-bit) Value Field Length.
 class BytesIvr extends BytesElement
-    with LittleEndianGetMixin, LittleEndianSetMixin, BytesElementMixin
+    with
+        LittleEndianGetMixin,
+        LittleEndianSetMixin,
+        BytesDicomGetMixin,
+        BytesDicomSetMixin,
+        BytesElementMixin
     implements ElementInterface {
   @override
   Uint8List buf;
@@ -302,14 +353,14 @@ class BytesIvr extends BytesElement
       BytesIvr.typedDataView(bytes.asUint8List(offset, length));
 
   /// Returns an [BytesIvr] with an empty Value Field.
-  factory BytesIvr.header(int code, int vrCode, int vfLength) {
+  factory BytesIvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     return BytesIvr.empty(kVFOffset + vfLength)
       ..setHeader(code, vfLength, vrCode);
   }
 
   /// Creates an [BytesIvr].
-  factory BytesIvr.element(int code, int vrCode, Bytes vfBytes) {
+  factory BytesIvr.element(int code, Bytes vfBytes, int vrCode) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     return BytesIvr.empty(kVFOffset + vfLength)
