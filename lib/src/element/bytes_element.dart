@@ -42,8 +42,12 @@ enum BytesElementType {
 ///     -
 abstract class BytesElement extends Bytes
     with BytesElementMixin, ToStringMixin {
-  /// Returns _true_ if _this_ is Explicit VR.
-  bool get isEvr => true;
+
+  /// Returns true if _this_ has Explicit Value Representation (EVR).
+  bool get isEvr;
+
+  @override
+  int get code;
 
   /// The integer value in the VR field of _this_.
   @override
@@ -79,6 +83,11 @@ abstract class BytesElement extends Bytes
   /// Returns the Value Field of _this_ as [Bytes].
   @override
   Bytes get vfBytes;
+
+  @override
+  String toString() => '$runtimeType($length) $code $vrId ($vfLength) $vfBytes';
+
+  // **** End of interface ****
 
   /// Creates a [BytesElement] of [type].
   static BytesElement make(

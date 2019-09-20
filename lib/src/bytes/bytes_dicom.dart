@@ -339,12 +339,16 @@ abstract class BytesDicom extends Bytes
   // Urgent: unit test
   /// Returns a [Bytes] containing the Utf8 decoding of [s].
   static BytesDicom fromString(String s,
-          [int maxLength, String padChar = ' ', Uint8List decoder(String s)]) =>
+          [int maxLength,
+          String padChar = ' ',
+          Uint8List Function(String s) decoder]) =>
       _stringToBytes(s, maxLength ?? s.length, padChar, decoder);
 
   /// Returns a [Bytes] containing the ASCII encoding of [list].
   static BytesDicom fromStringList(List<String> list,
-          [int maxLength, String padChar = ' ', Uint8List decoder(String s)]) =>
+          [int maxLength,
+          String padChar = ' ',
+          Uint8List Function(String s) decoder]) =>
       _listToBytes(list, maxLength, padChar, decoder);
 
   // Urgent: unit test
@@ -402,8 +406,8 @@ class BytesDicomBE extends BytesDicom
 
 // Urgent: unit test
 /// Returns a [Bytes] containing the Base64 decoding of [s].
-BytesDicom _stringToBytes(
-    String s, int maxLength, String padChar, Uint8List decoder(String s)) {
+BytesDicom _stringToBytes(String s, int maxLength, String padChar,
+    Uint8List Function(String s) decoder) {
   if (s.isEmpty) return Bytes.kEmptyBytes;
   var bList = decoder(s);
   if (padChar != null) {
@@ -421,7 +425,7 @@ BytesDicom _stringToBytes(
 
 /// Returns a [Bytes] containing a decoding of [list].
 Bytes _listToBytes(List<String> list, int maxLength, String padChar,
-    Uint8List decoder(String s)) {
+    Uint8List Function(String s) decoder) {
   final s = list.join('\\').trimLeft();
   return _stringToBytes(s, maxLength, padChar, decoder);
 }

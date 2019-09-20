@@ -158,7 +158,7 @@ void main() {
       for (var i = 0; i < 10; i++) {
         final vList1 = rng.asciiBytes(0, i);
         final rBuf = getReadBuffer(vList1);
-        final s = rBuf.readAscii(vList1.length);
+        final s = rBuf.readAscii(vList1.length, noPadding: false);
         print('readAscii: "$s"');
         expect(vList1.length, equals(s.length));
       }
