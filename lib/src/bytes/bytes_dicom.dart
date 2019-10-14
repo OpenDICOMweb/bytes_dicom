@@ -126,7 +126,10 @@ abstract class BytesDicom extends Bytes
   /// Returns a [String] containing a decoding of the specified region.
   /// If [decoder] is not specified, it defaults to _UTF-8_.
   @override
-  String getString([int offset = 0, int length, Decoder decoder]) =>
+  String getString(
+          [int offset = 0,
+          int length,
+          String decoder(Uint8List list, {bool allowInvalid})]) =>
       super.getString(offset, _getLength(offset, length), decoder);
 
   /// Returns a [List<String>]. This is done by first decoding
@@ -136,7 +139,7 @@ abstract class BytesDicom extends Bytes
   List<String> getStringList(
           [int offset = 0,
           int length,
-          Decoder decoder,
+            String decoder(Uint8List list, {bool allowInvalid}),
           String separator = '\\']) =>
       getStringList(offset, _getLength(offset, length), decoder, '\\');
 
@@ -265,7 +268,7 @@ abstract class BytesDicom extends Bytes
   ///
   /// Note: Currently only encodes Latin1.
   @override
-  void setString(int start, String s, [Encoder encoder]) =>
+  void setString(int start, String s, [Uint8List encoder(String s)]) =>
       _setStringBytes(start, encoder(s));
 
   // Urgent is this useful is it faster

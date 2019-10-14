@@ -11,7 +11,7 @@ import 'dart:typed_data';
 import 'package:bytes/bytes.dart';
 import 'package:bytes/src/constants.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
-import 'package:constants/constants.dart';
+import 'package:base/base.dart';
 import 'package:rng/rng.dart';
 import 'package:test/test.dart';
 import 'package:test_tools/tools.dart';

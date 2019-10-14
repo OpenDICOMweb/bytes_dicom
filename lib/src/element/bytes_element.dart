@@ -13,7 +13,7 @@ import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
 import 'package:bytes_dicom/src/element/element_interface.dart';
 import 'package:bytes_dicom/src/element/bytes_element_mixin.dart';
 import 'package:bytes_dicom/src/to_string_mixin.dart';
-import 'package:constants/constants.dart';
+import 'package:base/base.dart';
 
 /// The format of the [BytesElement].
 enum BytesElementType {

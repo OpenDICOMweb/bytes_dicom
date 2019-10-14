@@ -11,7 +11,7 @@ import 'dart:typed_data';
 
 import 'package:bytes/bytes_buffer.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
-import 'package:constants/constants.dart';
+import 'package:base/base.dart';
 
 const _kNull = 0;
 const _kSpace = 32;
