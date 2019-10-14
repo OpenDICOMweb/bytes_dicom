@@ -12,6 +12,9 @@ dependencies:
   bytes:
     path: C:/odw/sdk/bytes
     version: ^0.7.6
+  constants:
+    path: ../../constants
+    version: ^0.7.6
 
 dev_dependencies:
   benchmark_harness: any
