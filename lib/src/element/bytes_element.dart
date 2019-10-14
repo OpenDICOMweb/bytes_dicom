@@ -13,7 +13,7 @@ import 'package:bytes_dicom/src/bytes/bytes_dicom_mixin.dart';
 import 'package:bytes_dicom/src/element/element_interface.dart';
 import 'package:bytes_dicom/src/element/bytes_element_mixin.dart';
 import 'package:bytes_dicom/src/to_string_mixin.dart';
-import 'package:bytes_dicom/src/vr/vr_base.dart';
+import 'package:constants/constants.dart';
 
 /// The format of the [BytesElement].
 enum BytesElementType {
@@ -42,7 +42,6 @@ enum BytesElementType {
 ///     -
 abstract class BytesElement extends Bytes
     with BytesElementMixin, ToStringMixin {
-
   /// Returns true if _this_ has Explicit Value Representation (EVR).
   bool get isEvr;
 
@@ -85,24 +84,25 @@ abstract class BytesElement extends Bytes
   Bytes get vfBytes;
 
   @override
-  String toString() => '$runtimeType($length) $code $vrId ($vfLength) $vfBytes';
+  String toString() =>
+      '$runtimeType($length) ${dcm(code)} $vrId ($vfLength) $vfBytes';
 
   // **** End of interface ****
 
   /// Creates a [BytesElement] of [type].
   static BytesElement make(
-      int code, Bytes vfBytes, int vrCode, BytesElementType type) {
+      int code, int vrCode, Bytes vfBytes, BytesElementType type) {
     switch (type) {
       case BytesElementType.leShortEvr:
-        return BytesLEShortEvr.element(code, vfBytes, vrCode);
+        return BytesLEShortEvr.element(code, vrCode, vfBytes);
       case BytesElementType.leLongEvr:
-        return BytesLELongEvr.element(code, vfBytes, vrCode);
+        return BytesLELongEvr.element(code, vrCode, vfBytes);
       case BytesElementType.beShortEvr:
-        return BytesBEShortEvr.element(code, vfBytes, vrCode);
+        return BytesBEShortEvr.element(code, vrCode, vfBytes);
       case BytesElementType.beLongEvr:
-        return BytesBELongEvr.element(code, vfBytes, vrCode);
+        return BytesBELongEvr.element(code, vrCode, vfBytes);
       case BytesElementType.leIvr:
-        return BytesIvr.element(code, vfBytes, vrCode);
+        return BytesIvr.element(code, vfBytes);
       default:
         throw ArgumentError();
     }
@@ -146,17 +146,17 @@ class BytesLEShortEvr extends BytesElement
   factory BytesLEShortEvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     final e = BytesLEShortEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
+      ..setHeader(code, vrCode, vfLength);
     return e;
   }
 
   /// Returns an [BytesLEShortEvr] created from a view
   /// of a Value Field ([vfBytes]).
-  factory BytesLEShortEvr.element(int code, Bytes vfBytes, int vrCode) {
+  factory BytesLEShortEvr.element(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     final e = BytesLEShortEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
+      ..setHeader(code, vrCode, vfLength)
       ..setUint8List(kVFOffset, vfBytes.buf);
     return e;
   }
@@ -202,17 +202,18 @@ class BytesLELongEvr extends BytesElement
   factory BytesLELongEvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     final e = BytesLELongEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
+      ..setHeader(code, vrCode, vfLength);
     return e;
   }
 
   /// Creates a [BytesLELongEvr].
-  factory BytesLELongEvr.element(int code, Bytes vfBytes, int vrCode) {
+  factory BytesLELongEvr.element(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     final e = BytesLELongEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
+      ..setHeader(code, vrCode, vfLength)
       ..setUint8List(kVFOffset, vfBytes.buf);
+    print(e);
     return e;
   }
 
@@ -257,17 +258,17 @@ class BytesBEShortEvr extends BytesElement
   factory BytesBEShortEvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     final e = BytesBEShortEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
+      ..setHeader(code, vrCode, vfLength);
     return e;
   }
 
   /// Returns an [BytesBEShortEvr] created from a view
   /// of a Value Field ([vfBytes]).
-  factory BytesBEShortEvr.element(int code, Bytes vfBytes, int vrCode) {
+  factory BytesBEShortEvr.element(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     final e = BytesBEShortEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
+      ..setHeader(code, vrCode, vfLength)
       ..setUint8List(kVFOffset, vfBytes.buf);
     return e;
   }
@@ -313,16 +314,16 @@ class BytesBELongEvr extends BytesElement
   factory BytesBELongEvr.header(int code, int vfLength, int vrCode) {
     assert(vfLength.isEven);
     final e = BytesBELongEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
+      ..setHeader(code, vrCode, vfLength);
     return e;
   }
 
   /// Creates an [BytesBELongEvr].
-  factory BytesBELongEvr.element(int code, Bytes vfBytes, int vrCode) {
+  factory BytesBELongEvr.element(int code, int vrCode, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     final e = BytesBELongEvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
+      ..setHeader(code, vrCode, vfLength)
       ..setUint8List(kVFOffset, vfBytes.buf);
     return e;
   }
@@ -362,18 +363,17 @@ class BytesIvr extends BytesElement
       BytesIvr.typedDataView(bytes.asUint8List(offset, length));
 
   /// Returns an [BytesIvr] with an empty Value Field.
-  factory BytesIvr.header(int code, int vfLength, int vrCode) {
+  factory BytesIvr.header(int code, int vfLength) {
     assert(vfLength.isEven);
-    return BytesIvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode);
+    return BytesIvr.empty(kVFOffset + vfLength)..setHeader(code, vfLength);
   }
 
   /// Creates an [BytesIvr].
-  factory BytesIvr.element(int code, Bytes vfBytes, int vrCode) {
+  factory BytesIvr.element(int code, Bytes vfBytes) {
     final vfLength = vfBytes.length;
     assert(vfLength.isEven);
     return BytesIvr.empty(kVFOffset + vfLength)
-      ..setHeader(code, vfLength, vrCode)
+      ..setHeader(code, vfLength)
       ..setUint8List(kVFOffset, vfBytes.buf);
   }
 
@@ -407,11 +407,11 @@ class BytesIvr extends BytesElement
   int get vfLength => buf.length - 8;
 
   // TODO: make private?
-  /// Write a short EVR header.
-  void setHeader(int offset, int code, int vlf) {
+  /// Write an IVR header.
+  void setHeader(int code, int vfLength) {
     setUint16(offset, code >> 16);
     setUint16(2, code & 0xFFFF);
-    setUint32(4, vlf);
+    setUint32(4, vfLength);
   }
 
   /// The offset of the Value Field in an IVR Element

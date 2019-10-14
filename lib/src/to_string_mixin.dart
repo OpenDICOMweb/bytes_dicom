@@ -6,8 +6,7 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-import 'package:bytes_dicom/src/vr/vr_base.dart';
-
+import 'package:constants/constants.dart';
 
 mixin ToStringMixin {
   int get code;

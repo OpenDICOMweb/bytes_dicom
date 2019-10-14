@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:bytes/bytes.dart';
 import 'package:bytes_dicom/src/element/element_interface.dart';
-import 'package:bytes_dicom/src/vr/vr_base.dart';
+import 'package:constants/constants.dart';
 
 const _kUndefinedLength = 0xFFFFFFFF;
 
@@ -103,9 +103,9 @@ mixin EvrMixin {
   String get vrId => vrIdFromIndex(vrIndex);
 
   void setElement(int code, int vrCode, Uint8List vf) {
-    final length = vf.length;
-    assert(length == vfOffset + length);
-    setHeader(code, vrCode, length);
+    final vfLength = vf.length;
+    assert(vfLength == vfOffset + vfLength);
+    setHeader(code, vrCode, vfLength);
     _setValueField(vf, vfOffset, buf);
   }
 }
@@ -135,12 +135,12 @@ mixin EvrShortBytes implements ElementInterface {
   }
 
   /// Write a short EVR header.
-  void setHeader(int code, int vrCode, int vlf) {
+  void setHeader(int code, int vrCode, int vfLength) {
     setUint16(0, code >> 16);
     setUint16(2, code & 0xFFFF);
     setUint8(4, vrCode >> 8);
     setUint8(5, vrCode & 0xFF);
-    setUint16(vfLengthOffset, vlf);
+    setUint16(vfLengthOffset, vfLength);
   }
 
   /// The Value Field offset.
@@ -174,13 +174,15 @@ mixin EvrLongBytes implements ElementInterface {
 
   // TODO: make private
   /// Write a short EVR header.
-  void setHeader(int code, int vrCode, int vlf) {
+  void setHeader(int code, int vrCode, int vfLength) {
     setUint16(0, code >> 16);
     setUint16(2, code & 0xFFFF);
+    print('vrCode0 ${vrCode >> 8}');
     setUint8(4, vrCode >> 8);
+    print('vrCode1 ${vrCode & 0xFF}');
     setUint8(5, vrCode & 0xFF);
     // Note: The Uint16 field at offset 6 is already zero.
-    setUint32(8, vlf);
+    setUint32(8, vfLength);
   }
 
   /// The offset to the Value Field.
@@ -212,17 +214,17 @@ mixin IvrBytes implements ElementInterface {
   }
 
   /// Set an IVR header.
-  void setHeader(int code, int vrCode, int vlf) {
+  void setHeader(int code, int vfLength) {
     setUint16(0, code >> 16);
     setUint16(2, code & 0xFFFF);
-    setUint32(6, vlf);
+    setUint32(4, vfLength);
   }
 
   /// Set an IVR Element
-  void setElement(int code, int vrCode, Uint8List vf) {
-    final length = vf.length;
-    assert(length == vfOffset + length);
-    setHeader(code, vrCode, length);
+  void setElement(int code, Uint8List vf) {
+    final vfLength = vf.length;
+    assert(vfLength == vfOffset + vfLength);
+    setHeader(code, vfLength);
     _setValueField(vf, vfOffset, buf);
   }
 

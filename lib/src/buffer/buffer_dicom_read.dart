@@ -11,7 +11,7 @@ import 'dart:typed_data';
 
 import 'package:bytes/bytes_buffer.dart';
 import 'package:bytes_dicom/bytes_dicom.dart';
-import 'package:bytes_dicom/src/vr/vr_base.dart';
+import 'package:constants/constants.dart';
 
 const _kNull = 0;
 const _kSpace = 32;
@@ -48,7 +48,7 @@ class DicomReadBuffer extends BytesBufferBase with ReadBufferMixin {
 
   /// Returns _true_ if this reader isClosed and it [isNotEmpty].
   bool get hadTrailingBytes {
-    if (_isClosed) return isEmpty;
+    if (_isClosed) return bytes.isEmpty;
     return false;
   }
 
